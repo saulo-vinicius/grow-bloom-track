@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { 
   Substance, 
   CalcInputs, 
@@ -73,12 +72,15 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
 
     try {
       // Como a tabela 'substances' não existe ainda no Supabase, vamos apenas usar dados locais
-      // Em um cenário real, implementaríamos a lógica para acessar a tabela no banco de dados
       console.log('Custom substances would be fetched here if table existed');
       setCustomSubstances([]); // Por enquanto, define como vazio
     } catch (error) {
       console.error('Error fetching custom substances:', error);
-      toast.error('Failed to load custom substances');
+      toast({
+        title: "Error",
+        description: "Failed to load custom substances",
+        variant: "destructive"
+      });
     }
   };
 
@@ -95,10 +97,15 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       
       if (data) {
         const recipes = data.map(item => {
-          // Precisamos fazer uma conversão explícita aqui e garantir que data.data seja um objeto
-          const recipeData = typeof item.data === 'string' 
-            ? JSON.parse(item.data)
-            : item.data;
+          // Parse the data field if it's a string
+          let recipeData;
+          if (typeof item.data === 'string') {
+            recipeData = JSON.parse(item.data);
+          } else if (item.data && typeof item.data === 'object') {
+            recipeData = item.data;
+          } else {
+            recipeData = { inputs: defaultInputs, results: null };
+          }
             
           return {
             id: item.id,
@@ -112,7 +119,11 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       }
     } catch (error) {
       console.error('Error fetching saved recipes:', error);
-      toast.error('Failed to load saved recipes');
+      toast({
+        title: "Error",
+        description: "Failed to load saved recipes",
+        variant: "destructive"
+      });
     }
   };
 
@@ -255,7 +266,12 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       toast.success('Calculation complete!');
     } catch (error) {
       console.error('Calculation error:', error);
-      toast.error('Error during calculation');
+      toast({
+        title: "Error",
+        description: "Error during calculation",
+        variant: "destructive"
+      });
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -391,33 +407,44 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
 
   const saveRecipe = async (name: string) => {
     if (!results) {
-      toast.error('No results to save');
+      toast({
+        title: "Error",
+        description: "No results to save",
+        variant: "destructive"
+      });
       return;
     }
 
     if (!user) {
-      toast.error('You must be logged in to save recipes');
+      toast({
+        title: "Error",
+        description: "You must be logged in to save recipes",
+        variant: "destructive"
+      });
       return;
     }
 
     if (!user.isPremium && isPremiumCalculation) {
-      toast.error('Premium subscription required to save this recipe');
+      toast({
+        title: "Error",
+        description: "Premium subscription required to save this recipe",
+        variant: "destructive"
+      });
       return;
     }
     
     try {
-      // Precisamos converter o objeto para um formato JSON compatível com o Supabase
-      const recipeData = {
+      // Convert the data to a string to avoid JSON type issues
+      const recipeData = JSON.stringify({
         inputs,
         results
-      };
+      });
 
-      // Formatamos os dados para o formato esperado pelo Supabase
       const { data, error } = await supabase
         .from('recipes')
         .insert({
           name,
-          data: recipeData, // O Supabase vai serializar isso automaticamente
+          data: recipeData, 
           user_id: user.id
         })
         .select();
@@ -425,20 +452,31 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       if (error) throw error;
       
       if (data && data[0]) {
+        // Parse the data back to an object for local state
+        const parsedData = JSON.parse(data[0].data as string);
+        
         const newRecipe: SavedRecipe = {
           id: data[0].id,
           name,
           createdAt: data[0].created_at,
-          inputs: recipeData.inputs,
-          results: recipeData.results
+          inputs: parsedData.inputs,
+          results: parsedData.results
         };
         
         setSavedRecipes(prev => [newRecipe, ...prev]);
-        toast.success('Recipe saved!');
+        toast({
+          title: "Success",
+          description: "Recipe saved!",
+          variant: "default"
+        });
       }
     } catch (error) {
       console.error('Error saving recipe:', error);
-      toast.error('Failed to save recipe');
+      toast({
+        title: "Error",
+        description: "Failed to save recipe",
+        variant: "destructive"
+      });
     }
   };
 
@@ -452,29 +490,46 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       if (error) throw error;
       
       setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id));
-      toast.success('Recipe deleted');
+      toast({
+        title: "Success",
+        description: "Recipe deleted",
+        variant: "default"
+      });
     } catch (error) {
       console.error('Error deleting recipe:', error);
-      toast.error('Failed to delete recipe');
+      toast({
+        title: "Error",
+        description: "Failed to delete recipe",
+        variant: "destructive"
+      });
     }
   };
 
   const applyRecipeToPlant = async (recipeId: string, plantId: string) => {
     if (!user?.isPremium && isPremiumCalculation) {
-      toast.error('Premium subscription required to apply this recipe');
+      toast({
+        title: "Error",
+        description: "Premium subscription required to apply this recipe",
+        variant: "destructive"
+      });
       return;
     }
 
     try {
       // In a real app, you would implement logic to apply the recipe to a plant
-      // This could involve storing the recipe ID with the plant or
-      // updating the plant's care instructions based on the recipe
-      
       // For now, we'll just show a success toast
-      toast.success('Recipe applied to plant!');
+      toast({
+        title: "Success",
+        description: "Recipe applied to plant!",
+        variant: "default"
+      });
     } catch (error) {
       console.error('Error applying recipe to plant:', error);
-      toast.error('Failed to apply recipe to plant');
+      toast({
+        title: "Error",
+        description: "Failed to apply recipe to plant",
+        variant: "destructive"
+      });
     }
   };
 

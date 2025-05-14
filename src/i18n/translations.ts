@@ -2,26 +2,8 @@
 // Define the available locales
 export type Locale = 'en' | 'pt' | 'es';
 
-// Define the base translation keys type
-export type TranslationKey = 
-  | 'nav.dashboard' | 'nav.plants' | 'nav.calculator' | 'nav.advancedCalculator' | 'nav.settings'
-  | 'calc.title' | 'calc.titleAdvanced' | 'calc.description' | 'calc.descriptionAdvanced'
-  | 'calc.calculator' | 'calc.savedRecipes' | 'calc.solution' | 'calc.solutionDesc'
-  | 'calc.volume' | 'calc.substances' | 'calc.substancesDesc' | 'calc.addSubstance'
-  | 'calc.noSubstances' | 'calc.plantType' | 'calc.growthPhase' | 'calc.environment'
-  | 'calc.waterQuality' | 'calc.nutrientSolution' | 'calc.calculating' | 'calc.calculate'
-  | 'calc.results' | 'calc.recommended' | 'calc.saveRecipe' | 'calc.applyToPlant'
-  | 'plant.herb' | 'plant.vegetable' | 'plant.fruit' | 'plant.seedling'
-  | 'plant.vegetative' | 'plant.flowering' | 'plant.indoor' | 'plant.outdoor'
-  | 'plant.temperature' | 'plant.humidity' | 'plant.ppm' | 'plant.growthPhase'
-  | 'plants.lastUpdate'
-  | 'premium.title' | 'premium.subtitle' | 'premium.upgrade' | 'premium.maxSubstances'
-  | 'premium.feature1' | 'premium.feature2' | 'premium.feature3' | 'premium.price'
-  | 'premium.perMonth' | 'premium.alreadyPremium'
-  | 'auth.signin' | 'auth.continue';
-
 // Define the translations object
-export const translations: Record<Locale, Record<TranslationKey, string>> = {
+export const translations: Record<Locale, Record<string, string>> = {
   en: {
     'nav.dashboard': 'Dashboard',
     'nav.plants': 'Plants',
@@ -52,6 +34,7 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'calc.recommended': 'Recommended nutrient mix',
     'calc.saveRecipe': 'Save Recipe',
     'calc.applyToPlant': 'Apply to Plant',
+    'calc.optimizeNow': 'Optimize Now',
     'plant.herb': 'Herbs',
     'plant.vegetable': 'Vegetables',
     'plant.fruit': 'Fruits',
@@ -64,7 +47,29 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'plant.humidity': 'Humidity',
     'plant.ppm': 'PPM',
     'plant.growthPhase': 'Growth Phase',
+    'plant.seedlingDesc': 'Early growth stage',
+    'plant.vegetativeDesc': 'Leaf and stem growth',
+    'plant.floweringDesc': 'Flowering stage',
+    'plant.name': 'Name',
+    'plant.species': 'Species',
+    'plant.location': 'Location',
+    'plant.updateStats': 'Update Stats',
+    'plant.updatePhoto': 'Update Photo',
+    'plant.addedOn': 'Added On',
+    'plant.cancel': 'Cancel',
+    'plant.save': 'Save',
+    'plant.delete': 'Delete',
+    'plant.fruiting': 'Fruiting',
+    'plant.mature': 'Mature',
     'plants.lastUpdate': 'Last update',
+    'plants.myPlants': 'My Plants',
+    'plants.search': 'Search plants...',
+    'plants.addNew': 'Add New Plant',
+    'plants.all': 'All',
+    'plants.indoor': 'Indoor',
+    'plants.outdoor': 'Outdoor',
+    'plants.noPlants': 'No plants added yet',
+    'plants.details': 'Plant Details',
     'premium.title': 'Premium Feature',
     'premium.subtitle': 'Upgrade to access advanced features',
     'premium.upgrade': 'Upgrade to Premium',
@@ -76,7 +81,28 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'premium.perMonth': 'per month',
     'premium.alreadyPremium': 'You already have Premium',
     'auth.signin': 'Signed in',
-    'auth.continue': 'You can continue'
+    'auth.continue': 'You can continue',
+    'auth.noAccount': 'Don\'t have an account?',
+    'auth.signup': 'Sign up',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.forgotPassword': 'Forgot password?',
+    'auth.or': 'or continue with',
+    'auth.google': 'Continue with Google',
+    'home.welcome': 'Welcome',
+    'home.myDashboard': 'My Dashboard',
+    'home.addPlant': 'Add Plant',
+    'home.yourPlants': 'Your Plants',
+    'home.recentUpdates': 'Recent Updates',
+    'home.viewAll': 'View all',
+    'settings.title': 'Settings',
+    'settings.account': 'Account',
+    'settings.theme': 'Theme',
+    'settings.notifications': 'Notifications',
+    'settings.help': 'Help & Support',
+    'settings.language': 'Language',
+    'app.title': 'BoraGrow',
+    'app.tagline': 'Smart plant management'
   },
   pt: {
     // Portuguese translations
@@ -109,6 +135,7 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'calc.recommended': 'Mistura de nutrientes recomendada',
     'calc.saveRecipe': 'Salvar Receita',
     'calc.applyToPlant': 'Aplicar na Planta',
+    'calc.optimizeNow': 'Otimizar Agora',
     'plant.herb': 'Ervas',
     'plant.vegetable': 'Vegetais',
     'plant.fruit': 'Frutas',
@@ -121,7 +148,29 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'plant.humidity': 'Umidade',
     'plant.ppm': 'PPM',
     'plant.growthPhase': 'Fase de Crescimento',
+    'plant.seedlingDesc': 'Estágio inicial de crescimento',
+    'plant.vegetativeDesc': 'Crescimento de folhas e caules',
+    'plant.floweringDesc': 'Fase de floração',
+    'plant.name': 'Nome',
+    'plant.species': 'Espécie',
+    'plant.location': 'Localização',
+    'plant.updateStats': 'Atualizar Estatísticas',
+    'plant.updatePhoto': 'Atualizar Foto',
+    'plant.addedOn': 'Adicionado Em',
+    'plant.cancel': 'Cancelar',
+    'plant.save': 'Salvar',
+    'plant.delete': 'Excluir',
+    'plant.fruiting': 'Frutificação',
+    'plant.mature': 'Maduro',
     'plants.lastUpdate': 'Última atualização',
+    'plants.myPlants': 'Minhas Plantas',
+    'plants.search': 'Buscar plantas...',
+    'plants.addNew': 'Adicionar Nova Planta',
+    'plants.all': 'Todas',
+    'plants.indoor': 'Interior',
+    'plants.outdoor': 'Exterior',
+    'plants.noPlants': 'Nenhuma planta adicionada ainda',
+    'plants.details': 'Detalhes da Planta',
     'premium.title': 'Recurso Premium',
     'premium.subtitle': 'Atualize para acessar recursos avançados',
     'premium.upgrade': 'Upgrade para Premium',
@@ -133,7 +182,28 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'premium.perMonth': 'por mês',
     'premium.alreadyPremium': 'Você já tem Premium',
     'auth.signin': 'Conectado',
-    'auth.continue': 'Você pode continuar'
+    'auth.continue': 'Você pode continuar',
+    'auth.noAccount': 'Não tem uma conta?',
+    'auth.signup': 'Cadastrar',
+    'auth.email': 'Email',
+    'auth.password': 'Senha',
+    'auth.forgotPassword': 'Esqueceu a senha?',
+    'auth.or': 'ou continue com',
+    'auth.google': 'Continuar com Google',
+    'home.welcome': 'Bem-vindo',
+    'home.myDashboard': 'Meu Painel',
+    'home.addPlant': 'Adicionar Planta',
+    'home.yourPlants': 'Suas Plantas',
+    'home.recentUpdates': 'Atualizações Recentes',
+    'home.viewAll': 'Ver tudo',
+    'settings.title': 'Configurações',
+    'settings.account': 'Conta',
+    'settings.theme': 'Tema',
+    'settings.notifications': 'Notificações',
+    'settings.help': 'Ajuda e Suporte',
+    'settings.language': 'Idioma',
+    'app.title': 'BoraGrow',
+    'app.tagline': 'Gerenciamento inteligente de plantas'
   },
   es: {
     // Spanish translations
@@ -166,6 +236,7 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'calc.recommended': 'Mezcla de nutrientes recomendada',
     'calc.saveRecipe': 'Guardar Receta',
     'calc.applyToPlant': 'Aplicar a la Planta',
+    'calc.optimizeNow': 'Optimizar Ahora',
     'plant.herb': 'Hierbas',
     'plant.vegetable': 'Vegetales',
     'plant.fruit': 'Frutas',
@@ -178,7 +249,29 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'plant.humidity': 'Humedad',
     'plant.ppm': 'PPM',
     'plant.growthPhase': 'Fase de Crecimiento',
+    'plant.seedlingDesc': 'Etapa inicial de crecimiento',
+    'plant.vegetativeDesc': 'Crecimiento de hojas y tallos',
+    'plant.floweringDesc': 'Fase de floración',
+    'plant.name': 'Nombre',
+    'plant.species': 'Especie',
+    'plant.location': 'Ubicación',
+    'plant.updateStats': 'Actualizar Estadísticas',
+    'plant.updatePhoto': 'Actualizar Foto',
+    'plant.addedOn': 'Añadido El',
+    'plant.cancel': 'Cancelar',
+    'plant.save': 'Guardar',
+    'plant.delete': 'Eliminar',
+    'plant.fruiting': 'Fructificación',
+    'plant.mature': 'Maduro',
     'plants.lastUpdate': 'Última actualización',
+    'plants.myPlants': 'Mis Plantas',
+    'plants.search': 'Buscar plantas...',
+    'plants.addNew': 'Añadir Nueva Planta',
+    'plants.all': 'Todas',
+    'plants.indoor': 'Interior',
+    'plants.outdoor': 'Exterior',
+    'plants.noPlants': 'Aún no se han añadido plantas',
+    'plants.details': 'Detalles de la Planta',
     'premium.title': 'Función Premium',
     'premium.subtitle': 'Actualice para acceder a funciones avanzadas',
     'premium.upgrade': 'Actualizar a Premium',
@@ -190,6 +283,27 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'premium.perMonth': 'por mes',
     'premium.alreadyPremium': 'Ya tienes Premium',
     'auth.signin': 'Conectado',
-    'auth.continue': 'Puedes continuar'
+    'auth.continue': 'Puedes continuar',
+    'auth.noAccount': '¿No tienes una cuenta?',
+    'auth.signup': 'Registrarse',
+    'auth.email': 'Correo electrónico',
+    'auth.password': 'Contraseña',
+    'auth.forgotPassword': '¿Olvidó su contraseña?',
+    'auth.or': 'o continuar con',
+    'auth.google': 'Continuar con Google',
+    'home.welcome': 'Bienvenido',
+    'home.myDashboard': 'Mi Panel',
+    'home.addPlant': 'Añadir Planta',
+    'home.yourPlants': 'Sus Plantas',
+    'home.recentUpdates': 'Actualizaciones Recientes',
+    'home.viewAll': 'Ver todo',
+    'settings.title': 'Configuración',
+    'settings.account': 'Cuenta',
+    'settings.theme': 'Tema',
+    'settings.notifications': 'Notificaciones',
+    'settings.help': 'Ayuda y Soporte',
+    'settings.language': 'Idioma',
+    'app.title': 'BoraGrow',
+    'app.tagline': 'Gestión inteligente de plantas'
   }
 };
