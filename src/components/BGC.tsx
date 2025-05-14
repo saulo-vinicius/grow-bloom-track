@@ -4,7 +4,7 @@ import { useTranslation } from '../i18n/i18nContext';
 import { useCalculator } from '../contexts/CalculatorContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlants } from '../contexts/PlantContext';
-import { toast } from "@/hooks/use-toast";  // Updated import path
+import { toast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -13,9 +13,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calculator, Lock, Save, ChevronRight, Trash, Check } from 'lucide-react';
+import { Calculator, Save, ChevronRight, Trash, Check } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 const BGC: React.FC = () => {
@@ -27,7 +25,6 @@ const BGC: React.FC = () => {
     inputs,
     results,
     savedRecipes,
-    isPremiumCalculation,
     setInputs,
     calculateResults,
     saveRecipe,
@@ -37,58 +34,43 @@ const BGC: React.FC = () => {
   
   const [recipeName, setRecipeName] = useState('');
   const [selectedPlant, setSelectedPlant] = useState('');
-  const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   
   const handleCalculate = () => {
     calculateResults();
-    if (isPremiumCalculation && !user?.isPremium) {
-      setShowPremiumDialog(true);
-    } else {
-      toast({
-        title: "Calculation complete",
-        description: "Your nutrient formula is ready!",
-      });
-    }
+    toast({
+      title: "Cálculo completo",
+      description: "Sua fórmula de nutrientes está pronta!",
+    });
   };
   
   const handleSaveRecipe = () => {
-    if (!user?.isPremium && isPremiumCalculation) {
-      setShowPremiumDialog(true);
-      return;
-    }
-    
     if (recipeName.trim()) {
       saveRecipe(recipeName);
       setRecipeName('');
       toast({
-        title: "Recipe saved",
-        description: `"${recipeName}" has been added to your saved recipes.`,
+        title: "Receita salva",
+        description: `"${recipeName}" foi adicionada às suas receitas salvas.`,
       });
     } else {
       toast({
-        title: "Recipe name required",
-        description: "Please enter a name for your recipe.",
+        title: "Nome da receita necessário",
+        description: "Por favor, insira um nome para sua receita.",
         variant: "destructive",
       });
     }
   };
   
   const handleApplyToPlant = () => {
-    if (!user?.isPremium && isPremiumCalculation) {
-      setShowPremiumDialog(true);
-      return;
-    }
-    
     if (selectedPlant) {
       applyRecipeToPlant('current', selectedPlant);
       toast({
-        title: "Recipe applied",
-        description: "Nutrient recipe has been applied to your plant.",
+        title: "Receita aplicada",
+        description: "Receita de nutrientes foi aplicada à sua planta.",
       });
     } else {
       toast({
-        title: "No plant selected",
-        description: "Please select a plant to apply this recipe.",
+        title: "Nenhuma planta selecionada",
+        description: "Por favor, selecione uma planta para aplicar esta receita.",
         variant: "destructive",
       });
     }
@@ -97,18 +79,13 @@ const BGC: React.FC = () => {
   const handleDeleteRecipe = (id: string) => {
     deleteRecipe(id);
     toast({
-      title: "Recipe deleted",
-      description: "The recipe has been removed from your saved recipes.",
+      title: "Receita excluída",
+      description: "A receita foi removida das suas receitas salvas.",
     });
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">{t('calc.title')}</h1>
-        <p className="text-muted-foreground">{t('calc.description')}</p>
-      </div>
-      
       <Tabs defaultValue="calculator" className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="calculator">
@@ -136,17 +113,17 @@ const BGC: React.FC = () => {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="herb" id="herb" />
-                  <Label htmlFor="herb">Herbs</Label>
+                  <Label htmlFor="herb">Ervas</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="vegetable" id="vegetable" />
-                  <Label htmlFor="vegetable">Vegetables</Label>
+                  <Label htmlFor="vegetable">Vegetais</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="fruit" id="fruit" />
-                  <Label htmlFor="fruit">Fruits</Label>
+                  <Label htmlFor="fruit">Frutas</Label>
                 </div>
               </RadioGroup>
             </CardContent>
@@ -165,17 +142,17 @@ const BGC: React.FC = () => {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="seedling" id="seedling" />
-                  <Label htmlFor="seedling">Seedling</Label>
+                  <Label htmlFor="seedling">Mudas</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="vegetative" id="vegetative" />
-                  <Label htmlFor="vegetative">Vegetative</Label>
+                  <Label htmlFor="vegetative">Vegetativa</Label>
                 </div>
                 
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="flowering" id="flowering" />
-                  <Label htmlFor="flowering">Flowering</Label>
+                  <Label htmlFor="flowering">Floração</Label>
                 </div>
               </RadioGroup>
             </CardContent>
@@ -213,7 +190,7 @@ const BGC: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>pH Value ({inputs.waterQuality})</Label>
+                  <Label>Valor de pH ({inputs.waterQuality})</Label>
                   <span className="text-sm text-muted-foreground">{inputs.waterQuality}</span>
                 </div>
                 <Slider 
@@ -227,7 +204,7 @@ const BGC: React.FC = () => {
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>Light Intensity (%)</Label>
+                  <Label>Intensidade da luz (%)</Label>
                   <span className="text-sm text-muted-foreground">{inputs.lightIntensity}%</span>
                 </div>
                 <Slider 
@@ -241,7 +218,7 @@ const BGC: React.FC = () => {
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>Plant Size (cm)</Label>
+                  <Label>Tamanho da planta (cm)</Label>
                   <span className="text-sm text-muted-foreground">{inputs.plantSize} cm</span>
                 </div>
                 <Slider 
@@ -255,7 +232,7 @@ const BGC: React.FC = () => {
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <Label>Container Size (L)</Label>
+                  <Label>Tamanho do recipiente (L)</Label>
                   <span className="text-sm text-muted-foreground">{inputs.containerSize} L</span>
                 </div>
                 <Slider 
@@ -279,66 +256,51 @@ const BGC: React.FC = () => {
           </Card>
           
           {results && (
-            <Card className={`${isPremiumCalculation && !user?.isPremium ? 'relative overflow-hidden' : ''}`}>
+            <Card>
               <CardHeader>
                 <CardTitle>{t('calc.results')}</CardTitle>
                 <CardDescription>{t('calc.recommended')}</CardDescription>
               </CardHeader>
               
               <CardContent className="space-y-4">
-                {/* Blur overlay for premium calculations */}
-                {isPremiumCalculation && !user?.isPremium && (
-                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
-                    <Lock className="h-12 w-12 text-plantgreen-600 mb-2" />
-                    <h3 className="text-lg font-semibold text-center">{t('premium.title')}</h3>
-                    <p className="text-center text-muted-foreground mb-4">{t('premium.subtitle')}</p>
-                    <Button 
-                      className="bg-plantgreen-600 hover:bg-plantgreen-700"
-                      onClick={() => setShowPremiumDialog(true)}
-                    >
-                      {t('premium.upgrade')}
-                    </Button>
-                  </div>
-                )}
-                
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-xs">Nutrient A</Label>
+                    <Label className="text-xs">Nutriente A</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientA} ml/L</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Nutrient B</Label>
+                    <Label className="text-xs">Nutriente B</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientB} ml/L</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Nutrient C</Label>
+                    <Label className="text-xs">Nutriente C</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientC} ml/L</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Target pH</Label>
+                    <Label className="text-xs">pH Alvo</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.ph}</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Watering (times per week)</Label>
+                    <Label className="text-xs">Regas (vezes por semana)</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.wateringFrequency}</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Light (hours per day)</Label>
+                    <Label className="text-xs">Luz (horas por dia)</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.lightHours}</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Expected Yield</Label>
+                    <Label className="text-xs">Rendimento esperado</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.expectedYield}</div>
                   </div>
                   
                   <div className="space-y-1">
-                    <Label className="text-xs">Growth Time</Label>
+                    <Label className="text-xs">Tempo de crescimento</Label>
                     <div className="text-plantgreen-600 font-semibold text-lg">{results.growthTime}</div>
                   </div>
                 </div>
@@ -347,7 +309,7 @@ const BGC: React.FC = () => {
               <CardFooter className="flex flex-col space-y-3">
                 <div className="w-full flex gap-2">
                   <Input 
-                    placeholder="Recipe name" 
+                    placeholder="Nome da receita" 
                     value={recipeName} 
                     onChange={(e) => setRecipeName(e.target.value)}
                   />
@@ -366,7 +328,7 @@ const BGC: React.FC = () => {
                   <div className="w-full flex gap-2">
                     <Select value={selectedPlant} onValueChange={setSelectedPlant}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a plant" />
+                        <SelectValue placeholder="Selecione uma planta" />
                       </SelectTrigger>
                       <SelectContent>
                         {plants.map(plant => (
@@ -416,15 +378,15 @@ const BGC: React.FC = () => {
                   <CardContent>
                     <div className="grid grid-cols-4 gap-2">
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground">Nutrient A</div>
+                        <div className="text-xs text-muted-foreground">Nutriente A</div>
                         <div className="font-semibold">{recipe.nutrientA} ml/L</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground">Nutrient B</div>
+                        <div className="text-xs text-muted-foreground">Nutriente B</div>
                         <div className="font-semibold">{recipe.nutrientB} ml/L</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground">Nutrient C</div>
+                        <div className="text-xs text-muted-foreground">Nutriente C</div>
                         <div className="font-semibold">{recipe.nutrientC} ml/L</div>
                       </div>
                       <div className="text-center">
@@ -436,7 +398,7 @@ const BGC: React.FC = () => {
                       <div className="mt-4 pt-2 border-t flex gap-2">
                         <Select onValueChange={(plantId) => applyRecipeToPlant(recipe.id, plantId)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Apply to plant..." />
+                            <SelectValue placeholder="Aplicar à planta..." />
                           </SelectTrigger>
                           <SelectContent>
                             {plants.map(plant => (
@@ -452,20 +414,20 @@ const BGC: React.FC = () => {
                             if (plantSelect && plantSelect.value) {
                               applyRecipeToPlant(recipe.id, plantSelect.value);
                               toast({
-                                title: "Recipe applied",
-                                description: `Recipe applied to selected plant`,
+                                title: "Receita aplicada",
+                                description: `Receita aplicada à planta selecionada`,
                               });
                             } else {
                               toast({
-                                title: "No plant selected",
-                                description: "Please select a plant first",
+                                title: "Nenhuma planta selecionada",
+                                description: "Por favor, selecione uma planta primeiro",
                                 variant: "destructive",
                               });
                             }
                           }}
                         >
                           <ChevronRight className="h-4 w-4 mr-2" />
-                          Apply
+                          Aplicar
                         </Button>
                       </div>
                     )}
@@ -479,63 +441,21 @@ const BGC: React.FC = () => {
                 <div className="mb-4">
                   <Save className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold">No Saved Recipes</h3>
+                <h3 className="text-lg font-semibold">Sem Receitas Salvas</h3>
                 <p className="text-muted-foreground text-center">
-                  Calculate and save recipes to view them here.
+                  Calcule e salve receitas para visualizá-las aqui.
                 </p>
                 <Button
                   className="mt-4 bg-plantgreen-600 hover:bg-plantgreen-700"
                   onClick={() => document.querySelector('[value="calculator"]')?.dispatchEvent(new Event('click'))}
                 >
-                  Create Recipe
+                  Criar Receita
                 </Button>
               </CardContent>
             </Card>
           )}
         </TabsContent>
       </Tabs>
-      
-      {/* Premium Upgrade Dialog */}
-      <Dialog open={showPremiumDialog} onOpenChange={setShowPremiumDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('premium.title')}</DialogTitle>
-            <DialogDescription>{t('premium.subtitle')}</DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-plantgreen-100 flex items-center justify-center">
-                <Check className="h-4 w-4 text-plantgreen-600" />
-              </div>
-              <span>{t('premium.feature1')}</span>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-plantgreen-100 flex items-center justify-center">
-                <Check className="h-4 w-4 text-plantgreen-600" />
-              </div>
-              <span>{t('premium.feature2')}</span>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-plantgreen-100 flex items-center justify-center">
-                <Check className="h-4 w-4 text-plantgreen-600" />
-              </div>
-              <span>{t('premium.feature3')}</span>
-            </div>
-            
-            <div className="text-center mt-6">
-              <div className="text-3xl font-bold text-plantgreen-600">{t('premium.price')}</div>
-              <div className="text-sm text-muted-foreground">{t('premium.perMonth')}</div>
-            </div>
-          </div>
-          
-          <Button className="w-full bg-plantgreen-600 hover:bg-plantgreen-700">
-            {t('premium.upgrade')}
-          </Button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

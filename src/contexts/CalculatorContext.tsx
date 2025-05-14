@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CalculatorInputs {
@@ -101,13 +101,12 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     
     setResults(calculationResults);
     
-    // Determine if this is a premium calculation
-    const isPremium = plantType !== 'herb' || growthPhase === 'flowering';
-    setIsPremiumCalculation(isPremium);
+    // Definimos como false pois não há mais verificação de premium
+    setIsPremiumCalculation(false);
     
     toast({
-      title: "Calculation complete!",
-      description: "Your nutrient recipe has been calculated.",
+      title: "Cálculo completo!",
+      description: "Sua fórmula de nutrientes foi calculada.",
     });
   };
 
@@ -115,11 +114,11 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     let yield1 = '';
     
     if (plantType === 'herb') {
-      yield1 = `${Math.round(plantSize * 0.5 * (lightIntensity / 50))} grams`;
+      yield1 = `${Math.round(plantSize * 0.5 * (lightIntensity / 50))} gramas`;
     } else if (plantType === 'vegetable') {
-      yield1 = `${Math.round(plantSize * 1.2 * (lightIntensity / 50))} grams`;
+      yield1 = `${Math.round(plantSize * 1.2 * (lightIntensity / 50))} gramas`;
     } else {
-      yield1 = `${Math.round(plantSize * 2 * (lightIntensity / 50))} grams`;
+      yield1 = `${Math.round(plantSize * 2 * (lightIntensity / 50))} gramas`;
     }
     
     return yield1;
@@ -148,14 +147,14 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
       baseWeeks = Math.round(baseWeeks * 1.2);
     }
     
-    return `${baseWeeks} weeks`;
+    return `${baseWeeks} semanas`;
   };
 
   const saveRecipe = async (name: string) => {
     if (!results) {
       toast({
-        title: "Error",
-        description: "No results to save",
+        title: "Erro",
+        description: "Não há resultados para salvar",
         variant: "destructive",
       });
       return;
@@ -190,16 +189,16 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     
     setSavedRecipes(prev => [newRecipe, ...prev]);
     toast({
-      title: "Success",
-      description: "Recipe saved!",
+      title: "Sucesso",
+      description: "Receita salva!",
     });
   };
 
   const deleteRecipe = (id: string) => {
     setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id));
     toast({
-      title: "Success",
-      description: "Recipe deleted",
+      title: "Sucesso",
+      description: "Receita excluída",
     });
   };
 
@@ -210,8 +209,8 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
       if (recipeId === 'current') {
         if (!results) {
           toast({
-            title: "Error",
-            description: "No recipe to apply",
+            title: "Erro",
+            description: "Não há receita para aplicar",
             variant: "destructive",
           });
           return;
@@ -224,8 +223,8 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
         const recipe = savedRecipes.find(r => r.id === recipeId);
         if (!recipe) {
           toast({
-            title: "Error",
-            description: "Recipe not found",
+            title: "Erro",
+            description: "Receita não encontrada",
             variant: "destructive",
           });
           return;
@@ -240,14 +239,14 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
       }
       
       toast({
-        title: "Success",
-        description: "Recipe applied to plant!",
+        title: "Sucesso",
+        description: "Receita aplicada à planta!",
       });
     } catch (error) {
       console.error('Error applying recipe to plant:', error);
       toast({
-        title: "Error",
-        description: "Failed to apply recipe to plant",
+        title: "Erro",
+        description: "Falha ao aplicar receita à planta",
         variant: "destructive",
       });
     }

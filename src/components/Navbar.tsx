@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
         <NavItem 
           to="/calculator" 
           icon={<Calculator className="h-5 w-5" />} 
-          label={t('nav.calculator')} 
+          label="Calculadora de Nutrientes" 
           active={location.pathname === '/calculator'} 
         />
         <NavItem 
