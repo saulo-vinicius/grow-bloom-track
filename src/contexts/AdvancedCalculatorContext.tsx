@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { toast } from '@/components/ui/use-toast';
+import { toast, toastUtils } from '@/components/ui/use-toast';
 import { 
   Substance, 
   CalcInputs, 
@@ -76,7 +76,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       setCustomSubstances([]); // Por enquanto, define como vazio
     } catch (error) {
       console.error('Error fetching custom substances:', error);
-      toast({
+      toastUtils({
         title: "Error",
         description: "Failed to load custom substances",
         variant: "destructive"
@@ -119,7 +119,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       }
     } catch (error) {
       console.error('Error fetching saved recipes:', error);
-      toast({
+      toastUtils({
         title: "Error",
         description: "Failed to load saved recipes",
         variant: "destructive"
@@ -160,7 +160,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
 
   const addCustomSubstance = async (substance: Substance) => {
     if (!user) {
-      toast.error('You need to be logged in to add custom substances');
+      toastUtils.error('You need to be logged in to add custom substances');
       return;
     }
 
@@ -181,10 +181,10 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       // if (error) throw error;
 
       setCustomSubstances(prev => [...prev, newSubstance]);
-      toast.success('Custom substance added successfully');
+      toastUtils.success('Custom substance added successfully');
     } catch (error) {
       console.error('Error adding custom substance:', error);
-      toast.error('Failed to add custom substance');
+      toastUtils.error('Failed to add custom substance');
     }
   };
 
@@ -263,7 +263,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
         
       setIsPremiumCalculation(isPremium);
       
-      toast.success('Calculation complete!');
+      toastUtils.success('Calculation complete!');
     } catch (error) {
       console.error('Calculation error:', error);
       toast({
@@ -271,7 +271,6 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
         description: "Error during calculation",
         variant: "destructive"
       });
-      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -464,11 +463,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
         };
         
         setSavedRecipes(prev => [newRecipe, ...prev]);
-        toast({
-          title: "Success",
-          description: "Recipe saved!",
-          variant: "default"
-        });
+        toastUtils.success('Recipe saved!');
       }
     } catch (error) {
       console.error('Error saving recipe:', error);
@@ -490,11 +485,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       if (error) throw error;
       
       setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id));
-      toast({
-        title: "Success",
-        description: "Recipe deleted",
-        variant: "default"
-      });
+      toastUtils.success('Recipe deleted');
     } catch (error) {
       console.error('Error deleting recipe:', error);
       toast({
@@ -518,11 +509,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
     try {
       // In a real app, you would implement logic to apply the recipe to a plant
       // For now, we'll just show a success toast
-      toast({
-        title: "Success",
-        description: "Recipe applied to plant!",
-        variant: "default"
-      });
+      toastUtils.success('Recipe applied to plant!');
     } catch (error) {
       console.error('Error applying recipe to plant:', error);
       toast({

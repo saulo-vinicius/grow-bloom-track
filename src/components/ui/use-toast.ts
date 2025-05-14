@@ -1,3 +1,6 @@
-import { useToast, toast } from "@/hooks/use-toast";
 
-export { useToast, toast };
+import { useToast, toast, toastUtils } from "@/hooks/use-toast";
+
+// Re-export for backward compatibility
+export { useToast, toast, toastUtils };
+

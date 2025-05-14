@@ -1,6 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { translations, Locale, TranslationKey } from './translations';
+import { translations, Locale } from './translations';
+
+// Use the type definition from vite-env.d.ts instead of importing from translations
+// TranslationKey is defined as 'string' in vite-env.d.ts
 
 interface I18nContextType {
   locale: Locale;
