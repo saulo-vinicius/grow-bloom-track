@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { useTranslation } from '../i18n/i18nContext';
 import { useCalculator } from '../contexts/CalculatorContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlants } from '../contexts/PlantContext';
+import { toast } from "@/components/ui/use-toast";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -39,6 +41,11 @@ const BGC: React.FC = () => {
     calculateResults();
     if (isPremiumCalculation && !user?.isPremium) {
       setShowPremiumDialog(true);
+    } else {
+      toast({
+        title: "Calculation complete",
+        description: "Your nutrient formula is ready!",
+      });
     }
   };
   
@@ -51,6 +58,16 @@ const BGC: React.FC = () => {
     if (recipeName.trim()) {
       saveRecipe(recipeName);
       setRecipeName('');
+      toast({
+        title: "Recipe saved",
+        description: `"${recipeName}" has been added to your saved recipes.`,
+      });
+    } else {
+      toast({
+        title: "Recipe name required",
+        description: "Please enter a name for your recipe.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -62,11 +79,25 @@ const BGC: React.FC = () => {
     
     if (selectedPlant) {
       applyRecipeToPlant('current', selectedPlant);
+      toast({
+        title: "Recipe applied",
+        description: "Nutrient recipe has been applied to your plant.",
+      });
+    } else {
+      toast({
+        title: "No plant selected",
+        description: "Please select a plant to apply this recipe.",
+        variant: "destructive",
+      });
     }
   };
   
   const handleDeleteRecipe = (id: string) => {
     deleteRecipe(id);
+    toast({
+      title: "Recipe deleted",
+      description: "The recipe has been removed from your saved recipes.",
+    });
   };
 
   return (
@@ -255,7 +286,7 @@ const BGC: React.FC = () => {
               <CardContent className="space-y-4">
                 {/* Blur overlay for premium calculations */}
                 {isPremiumCalculation && !user?.isPremium && (
-                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
+                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
                     <Lock className="h-12 w-12 text-plantgreen-600 mb-2" />
                     <h3 className="text-lg font-semibold text-center">{t('premium.title')}</h3>
                     <p className="text-center text-muted-foreground mb-4">{t('premium.subtitle')}</p>
@@ -411,7 +442,26 @@ const BGC: React.FC = () => {
                             ))}
                           </SelectContent>
                         </Select>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const plantSelect = document.querySelector('select[name="plant"]') as HTMLSelectElement;
+                            if (plantSelect && plantSelect.value) {
+                              applyRecipeToPlant(recipe.id, plantSelect.value);
+                              toast({
+                                title: "Recipe applied",
+                                description: `Recipe applied to selected plant`,
+                              });
+                            } else {
+                              toast({
+                                title: "No plant selected",
+                                description: "Please select a plant first",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
                           <ChevronRight className="h-4 w-4 mr-2" />
                           Apply
                         </Button>

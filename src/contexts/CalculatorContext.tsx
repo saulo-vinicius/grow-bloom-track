@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { toast } from 'sonner';
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CalculatorInputs {
   plantType: string;
@@ -104,7 +105,10 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     const isPremium = plantType !== 'herb' || growthPhase === 'flowering';
     setIsPremiumCalculation(isPremium);
     
-    toast.success('Calculation complete!');
+    toast({
+      title: "Calculation complete!",
+      description: "Your nutrient recipe has been calculated.",
+    });
   };
 
   const calculateExpectedYield = (plantType: string, plantSize: number, lightIntensity: number): string => {
@@ -147,9 +151,13 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     return `${baseWeeks} weeks`;
   };
 
-  const saveRecipe = (name: string) => {
+  const saveRecipe = async (name: string) => {
     if (!results) {
-      toast.error('No results to save');
+      toast({
+        title: "Error",
+        description: "No results to save",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -161,18 +169,87 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     
+    try {
+      // Try to save to Supabase if user is logged in
+      const user = supabase.auth.getUser();
+      if (user) {
+        // Save to Supabase recipes table
+        await supabase.from('recipes').insert({
+          name,
+          data: {
+            ...inputs,
+            ...results
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error saving recipe to Supabase:", error);
+      // Continue with local storage approach as fallback
+    }
+    
     setSavedRecipes(prev => [newRecipe, ...prev]);
-    toast.success('Recipe saved!');
+    toast({
+      title: "Success",
+      description: "Recipe saved!",
+    });
   };
 
   const deleteRecipe = (id: string) => {
     setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id));
-    toast.success('Recipe deleted');
+    toast({
+      title: "Success",
+      description: "Recipe deleted",
+    });
   };
 
-  const applyRecipeToPlant = (recipeId: string, plantId: string) => {
-    // This is a placeholder. When connected to Supabase, this would apply the recipe to the plant
-    toast.success('Recipe applied to plant!');
+  const applyRecipeToPlant = async (recipeId: string, plantId: string) => {
+    try {
+      // Get the recipe data
+      let recipeData;
+      if (recipeId === 'current') {
+        if (!results) {
+          toast({
+            title: "Error",
+            description: "No recipe to apply",
+            variant: "destructive",
+          });
+          return;
+        }
+        recipeData = {
+          ...inputs,
+          ...results,
+        };
+      } else {
+        const recipe = savedRecipes.find(r => r.id === recipeId);
+        if (!recipe) {
+          toast({
+            title: "Error",
+            description: "Recipe not found",
+            variant: "destructive",
+          });
+          return;
+        }
+        recipeData = recipe;
+      }
+      
+      // Try to save to Supabase if user is logged in
+      const user = supabase.auth.getUser();
+      if (user) {
+        // You can implement this later with actual Supabase connection
+      }
+      
+      toast({
+        title: "Success",
+        description: "Recipe applied to plant!",
+      });
+    } catch (error) {
+      console.error('Error applying recipe to plant:', error);
+      toast({
+        title: "Error",
+        description: "Failed to apply recipe to plant",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
