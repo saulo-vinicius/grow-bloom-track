@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../i18n/i18nContext';
 import { usePlants } from '../contexts/PlantContext';
-import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,14 +15,13 @@ import { ArrowLeft, Upload } from 'lucide-react';
 const AddPlantPage: React.FC = () => {
   const { t } = useTranslation();
   const { addPlant } = usePlants();
-  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     name: '',
     species: '',
     location: 'indoor' as 'indoor' | 'outdoor',
-    image_url: '/placeholder.svg',
+    imageUrl: '/placeholder.svg',
     growthPhase: 'Seedling',
     stats: [
       {
@@ -57,18 +55,12 @@ const AddPlantPage: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
-    
     try {
-      // Mapear para o formato correto esperado pelo addPlant
+      // Add missing required properties
       const plantData = {
-        name: formData.name,
-        species: formData.species,
-        strain: formData.species, // Usando species como strain
-        stage: formData.growthPhase,
-        location: formData.location,
-        user_id: user.id,
-        image_url: formData.image_url,
+        ...formData,
+        addedOn: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
       };
       
       await addPlant(plantData);
@@ -145,11 +137,11 @@ const AddPlantPage: React.FC = () => {
                       <SelectValue placeholder="Select growth phase" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Seedling">{t('plant.seedling')}</SelectItem>
-                      <SelectItem value="Vegetative">{t('plant.vegetative')}</SelectItem>
-                      <SelectItem value="Flowering">{t('plant.flowering')}</SelectItem>
-                      <SelectItem value="Fruiting">{t('plant.fruiting')}</SelectItem>
-                      <SelectItem value="Mature">{t('plant.mature')}</SelectItem>
+                      <SelectItem value="Seedling">Seedling</SelectItem>
+                      <SelectItem value="Vegetative">Vegetative</SelectItem>
+                      <SelectItem value="Flowering">Flowering</SelectItem>
+                      <SelectItem value="Fruiting">Fruiting</SelectItem>
+                      <SelectItem value="Mature">Mature</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

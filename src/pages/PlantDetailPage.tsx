@@ -214,9 +214,9 @@ const PlantDetailPage: React.FC = () => {
                   <div className="space-y-6">
                     <div className="aspect-video relative rounded-lg overflow-hidden">
                       <img 
-                        src={plant.image_url || '/placeholder.svg'} 
+                        src={plant.imageUrl} 
                         alt={plant.name} 
-                        className="object-cover w-full h-64 rounded-lg"
+                        className="object-cover w-full h-full"
                       />
                       <Badge 
                         variant="outline" 
