@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useTranslation } from '../i18n/i18nContext';
 import { useAdvancedCalculator } from '../contexts/AdvancedCalculatorContext';
@@ -11,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { AlertCircle, Calculator, Plus, Minus, AlertTriangle, Lock } from 'lucide-react';
+import { AlertCircle, Calculator, Plus, Minus, AlertTriangle, Lock, Save, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlants } from '../contexts/PlantContext';
 
 const AdvancedCalculator: React.FC = () => {
   const { t } = useTranslation();
@@ -327,7 +327,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ results, isPremiumCalculation
   const [recipeName, setRecipeName] = useState('');
   const [selectedPlant, setSelectedPlant] = useState('');
   const { saveRecipe, applyRecipeToPlant } = useAdvancedCalculator();
-  const { plants } = useContext(PlantContext);
+  const { plants } = usePlants();
 
   const handleSaveRecipe = () => {
     if (recipeName.trim()) {
@@ -463,7 +463,7 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ results, isPremiumCalculation
                 <SelectValue placeholder="Select a plant" />
               </SelectTrigger>
               <SelectContent>
-                {plants.map((plant: any) => (
+                {plants.map((plant) => (
                   <SelectItem key={plant.id} value={plant.id}>{plant.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -483,10 +483,5 @@ const ResultsCard: React.FC<ResultsCardProps> = ({ results, isPremiumCalculation
     </Card>
   );
 };
-
-// Missing imports
-import { useContext } from 'react';
-import { PlantContext } from '../contexts/PlantContext';
-import { Save, ChevronRight } from 'lucide-react';
 
 export default AdvancedCalculator;

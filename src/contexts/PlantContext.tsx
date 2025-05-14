@@ -1,220 +1,177 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
-export interface PlantStat {
-  date: string;
-  temperature: number;
-  humidity: number;
-  ppm: number;
-  notes?: string;
-}
-
+// Define the Plant type
 export interface Plant {
   id: string;
   name: string;
-  species: string;
-  location: 'indoor' | 'outdoor';
-  imageUrl: string;
-  addedOn: string;
-  lastUpdated: string;
-  stats: PlantStat[];
-  growthPhase: string;
+  strain: string;
+  stage: string;
+  image_url?: string;
+  user_id: string;
+  created_at?: string;
 }
 
+// Define the context type
 interface PlantContextType {
   plants: Plant[];
   loading: boolean;
   error: string | null;
-  addPlant: (plant: Omit<Plant, 'id'>) => Promise<void>;
-  updatePlant: (id: string, updates: Partial<Plant>) => Promise<void>;
+  fetchPlants: () => Promise<void>;
+  addPlant: (plant: Omit<Plant, 'id' | 'created_at'>) => Promise<void>;
+  updatePlant: (id: string, updates: Partial<Omit<Plant, 'id' | 'user_id' | 'created_at'>>) => Promise<void>;
   deletePlant: (id: string) => Promise<void>;
-  addPlantStat: (plantId: string, stat: Omit<PlantStat, 'date'>) => Promise<void>;
-  getPlantById: (id: string) => Plant | undefined;
+  getPlant: (id: string) => Plant | undefined;
 }
 
-const PlantContext = createContext<PlantContextType | undefined>(undefined);
+// Create the context with default values
+export const PlantContext = createContext<PlantContextType>({
+  plants: [],
+  loading: false,
+  error: null,
+  fetchPlants: async () => {},
+  addPlant: async () => {},
+  updatePlant: async () => {},
+  deletePlant: async () => {},
+  getPlant: () => undefined,
+});
 
-export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Context provider component
+interface PlantProviderProps {
+  children: ReactNode;
+}
+
+export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
   const [plants, setPlants] = useState<Plant[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Load plants when the user changes
+  // Fetch plants when user changes
   useEffect(() => {
-    const loadPlants = async () => {
-      if (!user) {
-        setPlants([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        // This is where you would fetch plants from Supabase
-        // For now, we'll load from localStorage as a placeholder
-        const savedPlants = localStorage.getItem(`boragrow_plants_${user.id}`);
-        
-        if (savedPlants) {
-          setPlants(JSON.parse(savedPlants));
-        } else {
-          // Sample plants for testing
-          const samplePlants: Plant[] = [
-            {
-              id: '1',
-              name: 'Monstera Deliciosa',
-              species: 'Monstera',
-              location: 'indoor',
-              imageUrl: '/placeholder.svg',
-              addedOn: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-              lastUpdated: new Date().toISOString(),
-              stats: [
-                {
-                  date: new Date().toISOString(),
-                  temperature: 24,
-                  humidity: 65,
-                  ppm: 800,
-                  notes: 'Looking healthy'
-                }
-              ],
-              growthPhase: 'Vegetative'
-            },
-            {
-              id: '2',
-              name: 'Basil',
-              species: 'Ocimum basilicum',
-              location: 'outdoor',
-              imageUrl: '/placeholder.svg',
-              addedOn: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-              lastUpdated: new Date().toISOString(),
-              stats: [
-                {
-                  date: new Date().toISOString(),
-                  temperature: 28,
-                  humidity: 55,
-                  ppm: 600,
-                  notes: 'Ready for harvest'
-                }
-              ],
-              growthPhase: 'Mature'
-            }
-          ];
-          
-          setPlants(samplePlants);
-          localStorage.setItem(`boragrow_plants_${user.id}`, JSON.stringify(samplePlants));
-        }
-      } catch (err) {
-        console.error('Error loading plants:', err);
-        setError('Failed to load plants');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPlants();
+    if (user) {
+      fetchPlants();
+    } else {
+      setPlants([]);
+    }
   }, [user]);
 
-  // Save plants to localStorage when they change
-  useEffect(() => {
-    if (user && plants.length > 0) {
-      localStorage.setItem(`boragrow_plants_${user.id}`, JSON.stringify(plants));
-    }
-  }, [plants, user]);
-
-  const addPlant = async (plantData: Omit<Plant, 'id'>) => {
+  // Fetch plants from Supabase
+  const fetchPlants = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    
     try {
-      if (!user) throw new Error('User not authenticated');
+      const { data, error } = await supabase
+        .from('plants')
+        .select('*')
+        .eq('user_id', user.id);
       
-      const newPlant: Plant = {
-        ...plantData,
-        id: Date.now().toString(),
-        addedOn: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-      };
+      if (error) throw error;
       
-      setPlants(prevPlants => [...prevPlants, newPlant]);
-      toast.success('Plant added successfully!');
-    } catch (err) {
+      setPlants(data || []);
+    } catch (err: any) {
+      console.error('Error fetching plants:', err);
+      setError(err.message);
+      toast.error('Failed to load plants');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add a new plant
+  const addPlant = async (plant: Omit<Plant, 'id' | 'created_at'>) => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('plants')
+        .insert([plant])
+        .select();
+      
+      if (error) throw error;
+      
+      if (data && data[0]) {
+        setPlants(prev => [...prev, data[0]]);
+        toast.success('Plant added successfully');
+      }
+    } catch (err: any) {
       console.error('Error adding plant:', err);
-      setError('Failed to add plant');
+      setError(err.message);
       toast.error('Failed to add plant');
-      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updatePlant = async (id: string, updates: Partial<Plant>) => {
+  // Update an existing plant
+  const updatePlant = async (id: string, updates: Partial<Omit<Plant, 'id' | 'user_id' | 'created_at'>>) => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    
     try {
-      if (!user) throw new Error('User not authenticated');
+      const { data, error } = await supabase
+        .from('plants')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select();
       
-      setPlants(prevPlants => 
-        prevPlants.map(plant => 
-          plant.id === id 
-            ? { 
-                ...plant, 
-                ...updates, 
-                lastUpdated: new Date().toISOString() 
-              } 
-            : plant
-        )
-      );
+      if (error) throw error;
       
-      toast.success('Plant updated successfully!');
-    } catch (err) {
+      if (data && data[0]) {
+        setPlants(prev => prev.map(p => p.id === id ? data[0] : p));
+        toast.success('Plant updated successfully');
+      }
+    } catch (err: any) {
       console.error('Error updating plant:', err);
-      setError('Failed to update plant');
+      setError(err.message);
       toast.error('Failed to update plant');
-      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Delete a plant
   const deletePlant = async (id: string) => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+    
     try {
-      if (!user) throw new Error('User not authenticated');
+      const { error } = await supabase
+        .from('plants')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
       
-      setPlants(prevPlants => prevPlants.filter(plant => plant.id !== id));
-      toast.success('Plant deleted successfully!');
-    } catch (err) {
+      if (error) throw error;
+      
+      setPlants(prev => prev.filter(p => p.id !== id));
+      toast.success('Plant deleted successfully');
+    } catch (err: any) {
       console.error('Error deleting plant:', err);
-      setError('Failed to delete plant');
+      setError(err.message);
       toast.error('Failed to delete plant');
-      throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const addPlantStat = async (plantId: string, stat: Omit<PlantStat, 'date'>) => {
-    try {
-      if (!user) throw new Error('User not authenticated');
-      
-      const newStat: PlantStat = {
-        ...stat,
-        date: new Date().toISOString(),
-      };
-      
-      setPlants(prevPlants => 
-        prevPlants.map(plant => 
-          plant.id === plantId 
-            ? {
-                ...plant,
-                stats: [newStat, ...plant.stats],
-                lastUpdated: new Date().toISOString(),
-              }
-            : plant
-        )
-      );
-      
-      toast.success('Plant statistics updated!');
-    } catch (err) {
-      console.error('Error adding plant stat:', err);
-      setError('Failed to update plant statistics');
-      toast.error('Failed to update plant statistics');
-      throw err;
-    }
-  };
-
-  const getPlantById = (id: string) => {
-    return plants.find(plant => plant.id === id);
+  // Get a specific plant by ID
+  const getPlant = (id: string) => {
+    return plants.find(p => p.id === id);
   };
 
   return (
@@ -223,11 +180,11 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         plants,
         loading,
         error,
+        fetchPlants,
         addPlant,
         updatePlant,
         deletePlant,
-        addPlantStat,
-        getPlantById,
+        getPlant,
       }}
     >
       {children}
@@ -235,6 +192,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
 };
 
+// Custom hook to use the plant context
 export const usePlants = () => {
   const context = useContext(PlantContext);
   if (context === undefined) {

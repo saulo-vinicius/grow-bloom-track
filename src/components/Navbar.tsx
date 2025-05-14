@@ -1,15 +1,14 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from '../i18n/i18nContext';
-import { useMobile } from '../hooks/use-mobile';
+import { useIsMobile } from '../hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu, Home, Leaf, Calculator, Settings } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   const NavItems = () => (
     <>
