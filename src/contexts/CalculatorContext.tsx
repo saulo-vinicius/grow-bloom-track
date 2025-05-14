@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,10 +43,10 @@ interface CalculatorContextType {
 }
 
 const defaultInputs: CalculatorInputs = {
-  plantType: 'herb', // Keeping default values for backward compatibility
-  growthPhase: 'vegetative', // Keeping default values for backward compatibility
-  environment: 'indoor', // Keeping default values for backward compatibility
-  waterQuality: 7, // Keeping default values for backward compatibility
+  plantType: 'herb',
+  growthPhase: 'vegetative',
+  environment: 'indoor',
+  waterQuality: 7,
   lightIntensity: 50,
   plantSize: 30,
   containerSize: 5,
@@ -100,8 +101,8 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     
     setResults(calculationResults);
     
-    // Set isPremiumCalculation to false to make it available for everyone
-    setIsPremiumCalculation(false);
+    // Set isPremiumCalculation to true to make it a premium feature
+    setIsPremiumCalculation(true);
     
     toast({
       title: "Calculation complete!",

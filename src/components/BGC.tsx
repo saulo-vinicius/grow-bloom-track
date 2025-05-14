@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useTranslation } from '../i18n/i18nContext';
 import { useCalculator } from '../contexts/CalculatorContext';
@@ -166,99 +167,123 @@ const BGC: React.FC = () => {
           </Card>
           
           {results && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('calc.results')}</CardTitle>
-                <CardDescription>{t('calc.recommended')}</CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Nutrient A</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientA} ml/L</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Nutrient B</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientB} ml/L</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Nutrient C</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientC} ml/L</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Target pH</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.ph}</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Watering (times per week)</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.wateringFrequency}</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Light (hours per day)</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.lightHours}</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Expected Yield</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.expectedYield}</div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label className="text-xs">Growth Time</Label>
-                    <div className="text-plantgreen-600 font-semibold text-lg">{results.growthTime}</div>
-                  </div>
-                </div>
-              </CardContent>
-              
-              <CardFooter className="flex flex-col space-y-3">
-                <div className="w-full flex gap-2">
-                  <Input 
-                    placeholder="Recipe name" 
-                    value={recipeName} 
-                    onChange={(e) => setRecipeName(e.target.value)}
-                  />
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={handleSaveRecipe} 
-                    disabled={!recipeName.trim()}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {t('calc.saveRecipe')}
-                  </Button>
-                </div>
+            <div className="relative">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('calc.results')}</CardTitle>
+                  <CardDescription>{t('calc.recommended')}</CardDescription>
+                </CardHeader>
                 
-                {plants.length > 0 && (
+                <CardContent className="space-y-4">                
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nutrient A</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientA} ml/L</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nutrient B</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientB} ml/L</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Nutrient C</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientC} ml/L</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Target pH</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.ph}</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Watering (times per week)</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.wateringFrequency}</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Light (hours per day)</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.lightHours}</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Expected Yield</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.expectedYield}</div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs">Growth Time</Label>
+                      <div className="text-plantgreen-600 font-semibold text-lg">{results.growthTime}</div>
+                    </div>
+                  </div>
+                </CardContent>
+                
+                <CardFooter className="flex flex-col space-y-3">
                   <div className="w-full flex gap-2">
-                    <Select value={selectedPlant} onValueChange={setSelectedPlant}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a plant" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {plants.map(plant => (
-                          <SelectItem key={plant.id} value={plant.id}>{plant.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input 
+                      placeholder="Recipe name" 
+                      value={recipeName} 
+                      onChange={(e) => setRecipeName(e.target.value)}
+                    />
                     
                     <Button 
                       variant="outline" 
-                      onClick={handleApplyToPlant}
-                      disabled={!selectedPlant}
+                      onClick={handleSaveRecipe} 
+                      disabled={!recipeName.trim()}
                     >
-                      <ChevronRight className="h-4 w-4 mr-2" />
-                      {t('calc.applyToPlant')}
+                      <Save className="h-4 w-4 mr-2" />
+                      {t('calc.saveRecipe')}
                     </Button>
                   </div>
-                )}
-              </CardFooter>
-            </Card>
+                  
+                  {plants.length > 0 && (
+                    <div className="w-full flex gap-2">
+                      <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a plant" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {plants.map(plant => (
+                            <SelectItem key={plant.id} value={plant.id}>{plant.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button 
+                        variant="outline" 
+                        onClick={handleApplyToPlant}
+                        disabled={!selectedPlant}
+                      >
+                        <ChevronRight className="h-4 w-4 mr-2" />
+                        {t('calc.applyToPlant')}
+                      </Button>
+                    </div>
+                  )}
+                </CardFooter>
+              </Card>
+              
+              {/* Premium Overlay for Result Card */}
+              {isPremiumCalculation && !user?.isPremium && (
+                <div 
+                  className="absolute inset-0 backdrop-blur-md flex flex-col items-center justify-center bg-black/30 rounded-lg"
+                  onClick={() => setShowPremiumDialog(true)}
+                >
+                  <div className="text-white text-center p-6">
+                    <h3 className="text-xl font-bold mb-2">{t('premium.lockedFeature')}</h3>
+                    <p className="mb-4">{t('premium.unlockFeature')}</p>
+                    <Button 
+                      className="bg-plantgreen-600 hover:bg-plantgreen-700" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowPremiumDialog(true);
+                      }}
+                    >
+                      {t('premium.upgrade')}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </TabsContent>
         
