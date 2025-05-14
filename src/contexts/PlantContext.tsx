@@ -4,6 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
+// Define o tipo PlantStat
+export interface PlantStat {
+  date: string;
+  temperature: number;
+  humidity: number;
+  ppm: number;
+  notes: string;
+}
+
 // Define the Plant type
 export interface Plant {
   id: string;
@@ -18,11 +27,8 @@ export interface Plant {
   location?: string;
   growthPhase?: string;
   lastUpdated?: string;
-  stats?: Array<{
-    temperature: number;
-    humidity: number;
-    ppm: number;
-  }>;
+  addedOn?: string;
+  stats?: PlantStat[];
 }
 
 // Define the context type
@@ -35,6 +41,8 @@ interface PlantContextType {
   updatePlant: (id: string, updates: Partial<Omit<Plant, 'id' | 'user_id' | 'created_at'>>) => Promise<void>;
   deletePlant: (id: string) => Promise<void>;
   getPlant: (id: string) => Plant | undefined;
+  getPlantById: (id: string) => Plant | undefined;
+  addPlantStat: (plantId: string, stat: Omit<PlantStat, 'date'>) => Promise<void>;
 }
 
 // Create the context with default values
@@ -47,6 +55,8 @@ export const PlantContext = createContext<PlantContextType>({
   updatePlant: async () => {},
   deletePlant: async () => {},
   getPlant: () => undefined,
+  getPlantById: () => undefined,
+  addPlantStat: async () => {},
 });
 
 // Context provider component
@@ -91,10 +101,13 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
         location: 'indoor', // Valor padrão para location
         growthPhase: plant.stage, // Mapeia stage para growthPhase para compatibilidade
         lastUpdated: plant.created_at, // Usa created_at como lastUpdated
+        addedOn: plant.created_at, // Usa created_at como addedOn
         stats: [{ // Estatísticas de exemplo
+          date: new Date().toISOString(),
           temperature: 24,
           humidity: 60,
-          ppm: 800
+          ppm: 800,
+          notes: ''
         }]
       })) || [];
       
@@ -115,16 +128,42 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     
+    // Garantir que temos todos os campos necessários
+    const plantData = {
+      name: plant.name,
+      strain: plant.species || '',
+      stage: plant.growthPhase || '',
+      user_id: user.id,
+      // Outros campos conforme necessário
+    };
+    
     try {
       const { data, error } = await supabase
         .from('plants')
-        .insert([plant])
+        .insert([plantData])
         .select();
       
       if (error) throw error;
       
       if (data && data[0]) {
-        setPlants(prev => [...prev, data[0]]);
+        // Enriquecer os dados com os campos adicionais
+        const enrichedPlant = {
+          ...data[0],
+          species: data[0].strain,
+          location: plant.location || 'indoor',
+          growthPhase: data[0].stage,
+          lastUpdated: data[0].created_at,
+          addedOn: data[0].created_at,
+          stats: plant.stats || [{
+            date: new Date().toISOString(),
+            temperature: 24,
+            humidity: 60,
+            ppm: 800,
+            notes: ''
+          }]
+        };
+        
+        setPlants(prev => [...prev, enrichedPlant]);
         toast.success('Plant added successfully');
       }
     } catch (err: any) {
@@ -143,10 +182,17 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
     setLoading(true);
     setError(null);
     
+    // Mapear os campos atualizados para o formato correto da tabela
+    const plantUpdates: any = {};
+    if (updates.name) plantUpdates.name = updates.name;
+    if (updates.species) plantUpdates.strain = updates.species;
+    if (updates.growthPhase) plantUpdates.stage = updates.growthPhase;
+    // Adicionar outros campos conforme necessário
+    
     try {
       const { data, error } = await supabase
         .from('plants')
-        .update(updates)
+        .update(plantUpdates)
         .eq('id', id)
         .eq('user_id', user.id)
         .select();
@@ -154,7 +200,19 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
       if (error) throw error;
       
       if (data && data[0]) {
-        setPlants(prev => prev.map(p => p.id === id ? data[0] : p));
+        // Atualizar a planta no estado local com os campos enriquecidos
+        setPlants(prev => prev.map(p => {
+          if (p.id === id) {
+            return {
+              ...p,
+              ...data[0],
+              species: data[0].strain,
+              growthPhase: data[0].stage,
+              ...updates // Inclui outros campos atualizados que não estão na tabela
+            };
+          }
+          return p;
+        }));
         toast.success('Plant updated successfully');
       }
     } catch (err: any) {
@@ -197,6 +255,39 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
   const getPlant = (id: string) => {
     return plants.find(p => p.id === id);
   };
+  
+  // Alias para getPlant para compatibilidade
+  const getPlantById = (id: string) => {
+    return getPlant(id);
+  };
+  
+  // Adicionar uma nova estatística a uma planta
+  const addPlantStat = async (plantId: string, stat: Omit<PlantStat, 'date'>) => {
+    const plant = getPlantById(plantId);
+    if (!plant) return;
+    
+    const newStat: PlantStat = {
+      ...stat,
+      date: new Date().toISOString()
+    };
+    
+    // Por enquanto, apenas atualizar o estado local
+    // Em uma implementação completa, isso salvaria também no Supabase
+    setPlants(prev => prev.map(p => {
+      if (p.id === plantId) {
+        return {
+          ...p,
+          stats: [newStat, ...(p.stats || [])],
+          lastUpdated: newStat.date
+        };
+      }
+      return p;
+    }));
+    
+    toast.success('Plant stats updated successfully');
+    
+    // Aqui iria a lógica para salvar no Supabase se tivéssemos uma tabela para estatísticas
+  };
 
   return (
     <PlantContext.Provider
@@ -209,6 +300,8 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
         updatePlant,
         deletePlant,
         getPlant,
+        getPlantById,
+        addPlantStat,
       }}
     >
       {children}

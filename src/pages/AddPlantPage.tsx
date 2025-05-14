@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../i18n/i18nContext';
 import { usePlants } from '../contexts/PlantContext';
+import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import { ArrowLeft, Upload } from 'lucide-react';
 const AddPlantPage: React.FC = () => {
   const { t } = useTranslation();
   const { addPlant } = usePlants();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -55,12 +57,22 @@ const AddPlantPage: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     try {
-      // Add missing required properties
+      // Mapear para o formato correto esperado pelo addPlant
       const plantData = {
-        ...formData,
+        name: formData.name,
+        species: formData.species,
+        strain: formData.species,
+        stage: formData.growthPhase,
+        location: formData.location,
+        growthPhase: formData.growthPhase,
+        user_id: user.id,
+        image_url: formData.imageUrl,
+        stats: formData.stats,
         addedOn: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
       
       await addPlant(plantData);
@@ -77,19 +89,19 @@ const AddPlantPage: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate('/plants')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold ml-2">{t('plants.addNew')}</h1>
+          <h1 className="text-2xl font-bold ml-2">{t('plants.addNew' as TranslationKey)}</h1>
         </div>
         
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>{t('plants.details')}</CardTitle>
+                <CardTitle>{t('plants.details' as TranslationKey)}</CardTitle>
               </CardHeader>
               
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t('plant.name')}</Label>
+                  <Label htmlFor="name">{t('plant.name' as TranslationKey)}</Label>
                   <Input 
                     id="name" 
                     value={formData.name} 
@@ -99,7 +111,7 @@ const AddPlantPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="species">{t('plant.species')}</Label>
+                  <Label htmlFor="species">{t('plant.species' as TranslationKey)}</Label>
                   <Input 
                     id="species" 
                     value={formData.species} 
@@ -109,7 +121,7 @@ const AddPlantPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>{t('plant.location')}</Label>
+                  <Label>{t('plant.location' as TranslationKey)}</Label>
                   <RadioGroup 
                     value={formData.location} 
                     onValueChange={(value: 'indoor' | 'outdoor') => handleChange('location', value)}
@@ -117,18 +129,18 @@ const AddPlantPage: React.FC = () => {
                   >
                     <div className="flex items-center space-x-2 mr-4">
                       <RadioGroupItem value="indoor" id="indoor" />
-                      <Label htmlFor="indoor">{t('plant.indoor')}</Label>
+                      <Label htmlFor="indoor">{t('plant.indoor' as TranslationKey)}</Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="outdoor" id="outdoor" />
-                      <Label htmlFor="outdoor">{t('plant.outdoor')}</Label>
+                      <Label htmlFor="outdoor">{t('plant.outdoor' as TranslationKey)}</Label>
                     </div>
                   </RadioGroup>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="growthPhase">{t('plant.growthPhase')}</Label>
+                  <Label htmlFor="growthPhase">{t('plant.growthPhase' as TranslationKey)}</Label>
                   <Select 
                     value={formData.growthPhase} 
                     onValueChange={(value) => handleChange('growthPhase', value)}
@@ -150,12 +162,12 @@ const AddPlantPage: React.FC = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle>{t('plant.updateStats')}</CardTitle>
+                <CardTitle>{t('plant.updateStats' as TranslationKey)}</CardTitle>
               </CardHeader>
               
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="temperature">{t('plant.temperature')} (°C)</Label>
+                  <Label htmlFor="temperature">{t('plant.temperature' as TranslationKey)} (°C)</Label>
                   <Input 
                     id="temperature" 
                     type="number"
@@ -168,7 +180,7 @@ const AddPlantPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="humidity">{t('plant.humidity')} (%)</Label>
+                  <Label htmlFor="humidity">{t('plant.humidity' as TranslationKey)} (%)</Label>
                   <Input 
                     id="humidity" 
                     type="number"
@@ -181,7 +193,7 @@ const AddPlantPage: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="ppm">{t('plant.ppm')}</Label>
+                  <Label htmlFor="ppm">{t('plant.ppm' as TranslationKey)}</Label>
                   <Input 
                     id="ppm" 
                     type="number"
@@ -194,7 +206,7 @@ const AddPlantPage: React.FC = () => {
                 </div>
                 
                 <div className="mt-6">
-                  <Label className="mb-2 block">{t('plant.updatePhoto')}</Label>
+                  <Label className="mb-2 block">{t('plant.updatePhoto' as TranslationKey)}</Label>
                   <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center">
                     <Upload className="h-10 w-10 text-muted-foreground mb-4" />
                     <p className="text-sm text-muted-foreground text-center">
@@ -215,14 +227,14 @@ const AddPlantPage: React.FC = () => {
               variant="outline" 
               onClick={() => navigate('/plants')}
             >
-              {t('plant.cancel')}
+              {t('plant.cancel' as TranslationKey)}
             </Button>
             
             <Button 
               type="submit" 
               className="bg-plantgreen-600 hover:bg-plantgreen-700"
             >
-              {t('plant.save')}
+              {t('plant.save' as TranslationKey)}
             </Button>
           </div>
         </form>

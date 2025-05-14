@@ -1,13 +1,19 @@
+
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/use-mobile'; 
-import { Menu, X, Home, Plant, Calculator, FlaskConical, Settings } from 'lucide-react';
+import { Menu, X, Home, Sprout, Calculator, FlaskConical, Settings } from 'lucide-react';
 import { useTranslation } from '../i18n/i18nContext';
 import LanguageSelector from './LanguageSelector';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger
+} from './ui/sheet';
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
@@ -31,7 +37,7 @@ const Navbar: React.FC = () => {
           `flex items-center px-4 py-2 rounded-md ${isActive ? 'bg-plantgreen-100 text-plantgreen-700' : 'text-gray-700 hover:bg-plantgreen-50'}`
         }
       >
-        <Plant className="h-5 w-5 mr-2" />
+        <Sprout className="h-5 w-5 mr-2" />
         {t('nav.plants')}
       </NavLink>
       
