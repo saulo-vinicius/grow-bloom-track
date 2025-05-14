@@ -8,6 +8,7 @@ import { I18nProvider } from './i18n/i18nContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PlantProvider } from './contexts/PlantContext';
 import { CalculatorProvider } from './contexts/CalculatorContext';
+import { AdvancedCalculatorProvider } from './contexts/AdvancedCalculatorContext';
 
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -16,6 +17,7 @@ import PlantsPage from './pages/PlantsPage';
 import AddPlantPage from './pages/AddPlantPage';
 import PlantDetailPage from './pages/PlantDetailPage';
 import CalculatorPage from './pages/CalculatorPage';
+import AdvancedCalculatorPage from './pages/AdvancedCalculatorPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFound from "./pages/NotFound";
 
@@ -31,18 +33,21 @@ const App = () => (
           <AuthProvider>
             <PlantProvider>
               <CalculatorProvider>
-                <Routes>
-                  <Route path="/" element={<LoginPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/plants" element={<PlantsPage />} />
-                  <Route path="/plants/new" element={<AddPlantPage />} />
-                  <Route path="/plants/:plantId" element={<PlantDetailPage />} />
-                  <Route path="/calculator" element={<CalculatorPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <AdvancedCalculatorProvider>
+                  <Routes>
+                    <Route path="/" element={<LoginPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/plants" element={<PlantsPage />} />
+                    <Route path="/plants/new" element={<AddPlantPage />} />
+                    <Route path="/plants/:plantId" element={<PlantDetailPage />} />
+                    <Route path="/calculator" element={<CalculatorPage />} />
+                    <Route path="/advanced-calculator" element={<AdvancedCalculatorPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </AdvancedCalculatorProvider>
               </CalculatorProvider>
             </PlantProvider>
           </AuthProvider>
