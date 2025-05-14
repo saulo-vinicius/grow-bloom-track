@@ -1,0 +1,203 @@
+
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { toast } from 'sonner';
+
+interface CalculatorInputs {
+  plantType: string;
+  growthPhase: string;
+  environment: string;
+  waterQuality: number;
+  lightIntensity: number;
+  plantSize: number;
+  containerSize: number;
+}
+
+interface CalculatorResults {
+  nutrientA: number;
+  nutrientB: number;
+  nutrientC: number;
+  ph: number;
+  wateringFrequency: number;
+  lightHours: number;
+  expectedYield: string;
+  growthTime: string;
+}
+
+interface SavedRecipe extends CalculatorInputs, CalculatorResults {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+interface CalculatorContextType {
+  inputs: CalculatorInputs;
+  results: CalculatorResults | null;
+  savedRecipes: SavedRecipe[];
+  isPremiumCalculation: boolean;
+  setInputs: (inputs: Partial<CalculatorInputs>) => void;
+  calculateResults: () => void;
+  saveRecipe: (name: string) => void;
+  deleteRecipe: (id: string) => void;
+  applyRecipeToPlant: (recipeId: string, plantId: string) => void;
+}
+
+const defaultInputs: CalculatorInputs = {
+  plantType: 'herb',
+  growthPhase: 'vegetative',
+  environment: 'indoor',
+  waterQuality: 7,
+  lightIntensity: 50,
+  plantSize: 30,
+  containerSize: 5,
+};
+
+const CalculatorContext = createContext<CalculatorContextType | undefined>(undefined);
+
+export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [inputs, setInputsState] = useState<CalculatorInputs>(defaultInputs);
+  const [results, setResults] = useState<CalculatorResults | null>(null);
+  const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([]);
+  const [isPremiumCalculation, setIsPremiumCalculation] = useState(false);
+
+  const setInputs = (newInputs: Partial<CalculatorInputs>) => {
+    setInputsState(prev => ({ ...prev, ...newInputs }));
+    // Reset results when inputs change
+    setResults(null);
+  };
+
+  const calculateResults = () => {
+    // This is a placeholder calculation. Replace with your actual calculation logic
+    const { plantType, growthPhase, environment, waterQuality, lightIntensity, plantSize, containerSize } = inputs;
+    
+    // Simple algorithm to generate results based on inputs
+    const baseNutrientA = plantType === 'herb' ? 5 : plantType === 'vegetable' ? 7 : 10;
+    const baseNutrientB = growthPhase === 'seedling' ? 3 : growthPhase === 'vegetative' ? 7 : 10;
+    const baseNutrientC = environment === 'indoor' ? 5 : 8;
+    
+    // Apply some modifications based on other factors
+    const nutrientA = baseNutrientA * (plantSize / 30) * (containerSize / 5);
+    const nutrientB = baseNutrientB * (lightIntensity / 50) * (waterQuality / 7);
+    const nutrientC = baseNutrientC * (plantSize / 30) * (lightIntensity / 50);
+    
+    // Generate other values
+    const ph = waterQuality * 0.8;
+    const wateringFrequency = environment === 'indoor' ? 2 : 3;
+    const lightHours = growthPhase === 'seedling' ? 14 : growthPhase === 'vegetative' ? 16 : 12;
+    
+    const expectedYield = calculateExpectedYield(plantType, plantSize, lightIntensity);
+    const growthTime = calculateGrowthTime(plantType, growthPhase, environment);
+    
+    const calculationResults: CalculatorResults = {
+      nutrientA: parseFloat(nutrientA.toFixed(2)),
+      nutrientB: parseFloat(nutrientB.toFixed(2)),
+      nutrientC: parseFloat(nutrientC.toFixed(2)),
+      ph: parseFloat(ph.toFixed(1)),
+      wateringFrequency,
+      lightHours,
+      expectedYield,
+      growthTime,
+    };
+    
+    setResults(calculationResults);
+    
+    // Determine if this is a premium calculation
+    const isPremium = plantType !== 'herb' || growthPhase === 'flowering';
+    setIsPremiumCalculation(isPremium);
+    
+    toast.success('Calculation complete!');
+  };
+
+  const calculateExpectedYield = (plantType: string, plantSize: number, lightIntensity: number): string => {
+    let yield1 = '';
+    
+    if (plantType === 'herb') {
+      yield1 = `${Math.round(plantSize * 0.5 * (lightIntensity / 50))} grams`;
+    } else if (plantType === 'vegetable') {
+      yield1 = `${Math.round(plantSize * 1.2 * (lightIntensity / 50))} grams`;
+    } else {
+      yield1 = `${Math.round(plantSize * 2 * (lightIntensity / 50))} grams`;
+    }
+    
+    return yield1;
+  };
+
+  const calculateGrowthTime = (plantType: string, growthPhase: string, environment: string): string => {
+    let baseWeeks = 0;
+    
+    if (plantType === 'herb') {
+      baseWeeks = 6;
+    } else if (plantType === 'vegetable') {
+      baseWeeks = 10;
+    } else {
+      baseWeeks = 14;
+    }
+    
+    if (growthPhase === 'seedling') {
+      baseWeeks = Math.round(baseWeeks * 0.3);
+    } else if (growthPhase === 'vegetative') {
+      baseWeeks = Math.round(baseWeeks * 0.6);
+    } else {
+      baseWeeks = baseWeeks;
+    }
+    
+    if (environment === 'outdoor') {
+      baseWeeks = Math.round(baseWeeks * 1.2);
+    }
+    
+    return `${baseWeeks} weeks`;
+  };
+
+  const saveRecipe = (name: string) => {
+    if (!results) {
+      toast.error('No results to save');
+      return;
+    }
+    
+    const newRecipe: SavedRecipe = {
+      id: Date.now().toString(),
+      name,
+      ...inputs,
+      ...results,
+      createdAt: new Date().toISOString(),
+    };
+    
+    setSavedRecipes(prev => [newRecipe, ...prev]);
+    toast.success('Recipe saved!');
+  };
+
+  const deleteRecipe = (id: string) => {
+    setSavedRecipes(prev => prev.filter(recipe => recipe.id !== id));
+    toast.success('Recipe deleted');
+  };
+
+  const applyRecipeToPlant = (recipeId: string, plantId: string) => {
+    // This is a placeholder. When connected to Supabase, this would apply the recipe to the plant
+    toast.success('Recipe applied to plant!');
+  };
+
+  return (
+    <CalculatorContext.Provider
+      value={{
+        inputs,
+        results,
+        savedRecipes,
+        isPremiumCalculation,
+        setInputs,
+        calculateResults,
+        saveRecipe,
+        deleteRecipe,
+        applyRecipeToPlant,
+      }}
+    >
+      {children}
+    </CalculatorContext.Provider>
+  );
+};
+
+export const useCalculator = () => {
+  const context = useContext(CalculatorContext);
+  if (context === undefined) {
+    throw new Error('useCalculator must be used within a CalculatorProvider');
+  }
+  return context;
+};
