@@ -4,7 +4,7 @@ import { useTranslation } from '../i18n/i18nContext';
 import { useCalculator } from '../contexts/CalculatorContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlants } from '../contexts/PlantContext';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";  // Updated import path
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -16,11 +16,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calculator, Lock, Save, ChevronRight, Trash, Check } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const BGC: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { plants } = usePlants();
+  const { isDarkMode } = useTheme();
   const {
     inputs,
     results,
