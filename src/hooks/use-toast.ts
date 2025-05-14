@@ -1,178 +1,103 @@
 
-import * as React from "react"
+import { useState, useEffect, useRef } from "react";
 
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+// Types
+export type ToastVariant = "default" | "destructive" | "success";
+export interface Toast {
+  id: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  variant?: ToastVariant;
+}
+export type ToastOptions = Omit<Toast, "id">;
+export type ToastActionElement = React.ReactElement<
+  HTMLButtonElement,
+  string | React.JSXElementConstructor<any>
+>;
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 1000000
-
-type ToasterToast = ToastProps & {
-  id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
-  action?: ToastActionElement
+interface UseToastReturn {
+  toasts: Toast[];
+  toast: (options?: ToastOptions) => void;
+  dismiss: (id: string) => void;
+  dismissAll: () => void;
 }
 
-const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
-} as const
+// Generate a unique ID for toast
+const generateId = () => Math.random().toString(36).substring(2, 9);
 
-let count = 0
+export const useToast = (): UseToastReturn => {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
 
-function genId() {
-  count = (count + 1) % Number.MAX_VALUE
-  return count.toString()
-}
-
-type ActionType = typeof actionTypes
-
-type Action =
-  | {
-      type: ActionType["ADD_TOAST"]
-      toast: ToasterToast
-    }
-  | {
-      type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
-    }
-  | {
-      type: ActionType["DISMISS_TOAST"]
-      toastId?: string
-    }
-  | {
-      type: ActionType["REMOVE_TOAST"]
-      toastId?: string
-    }
-
-interface State {
-  toasts: ToasterToast[]
-}
-
-const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
-
-const reducer = (state: State, action: Action): State => {
-  switch (action.type) {
-    case "ADD_TOAST":
-      return {
-        ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
-      }
-
-    case "UPDATE_TOAST":
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
-        ),
-      }
-
-    case "DISMISS_TOAST": {
-      const { toastId } = action
-
-      // Dismiss all toasts
-      if (toastId === undefined) {
-        return {
-          ...state,
-          toasts: state.toasts.map((t) => ({
-            ...t,
-            open: false,
-          })),
-        }
-      }
-
-      // Dismiss toast by id
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId ? { ...t, open: false } : t
-        ),
-      }
-    }
-
-    case "REMOVE_TOAST": {
-      const { toastId } = action
-
-      if (toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        }
-      }
-
-      return {
-        ...state,
-        toasts: state.toasts.filter((t) => t.id !== toastId),
-      }
-    }
-  }
-}
-
-const listeners: Array<(state: State) => void> = []
-
-let memoryState: State = { toasts: [] }
-
-function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
-}
-
-export function toast({
-  ...props
-}: Omit<ToasterToast, "id">) {
-  const id = genId()
-
-  const update = (props: ToasterToast) =>
-    dispatch({
-      type: "UPDATE_TOAST",
-      toast: { ...props, id },
-    })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
-
-  dispatch({
-    type: "ADD_TOAST",
-    toast: {
-      ...props,
-      id,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) {
-          dismiss()
-        }
-      },
-    },
-  })
-
-  return {
-    id,
-    dismiss,
-    update,
-  }
-}
-
-export function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
-
-  React.useEffect(() => {
-    listeners.push(setState)
+  // Cleanup timers on unmount
+  useEffect(() => {
     return () => {
-      const index = listeners.indexOf(setState)
-      if (index > -1) {
-        listeners.splice(index, 1)
-      }
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
+  const dismissToast = (id: string) => {
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+    
+    // Clear auto dismiss timer for this toast
+    if (timersRef.current.has(id)) {
+      clearTimeout(timersRef.current.get(id));
+      timersRef.current.delete(id);
     }
-  }, [state])
+  };
+
+  const addToast = (options: ToastOptions = {}) => {
+    const id = generateId();
+    const toast = { id, ...options };
+    
+    setToasts((prevToasts) => [...prevToasts, toast]);
+    
+    // Auto dismiss after 5 seconds (5000ms)
+    const timer = setTimeout(() => {
+      dismissToast(id);
+    }, 5000);
+    
+    timersRef.current.set(id, timer);
+    
+    return id;
+  };
+
+  const dismissAllToasts = () => {
+    setToasts([]);
+    timersRef.current.forEach((timer) => clearTimeout(timer));
+    timersRef.current.clear();
+  };
 
   return {
-    ...state,
-    toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
-  }
-}
+    toasts,
+    toast: addToast,
+    dismiss: dismissToast,
+    dismissAll: dismissAllToasts,
+  };
+};
+
+export const toast = (options: ToastOptions) => {
+  const toastHelper = {
+    open: () => {
+      // This is just a placeholder as we can't directly call the hook's toast function
+      // The actual toast will be handled by the component using useToast()
+      console.log("Toast triggered:", options);
+    },
+  };
+  
+  // When called directly like this, we need to rely on the Toaster component
+  // picking up this call via the event system
+  
+  // Create a custom event to communicate with the Toaster component
+  const event = new CustomEvent("toast-trigger", { 
+    detail: options 
+  });
+  
+  // Dispatch the event
+  document.dispatchEvent(event);
+  
+  return toastHelper;
+};

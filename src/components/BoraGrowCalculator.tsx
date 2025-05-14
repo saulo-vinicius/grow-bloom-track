@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { createClient } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,31 +12,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Calculator,
   Beaker,
-  FlaskConical,
   Plus,
   Trash2,
-  Edit,
   X,
   Save,
   BookOpen,
-  Clock,
-  Bookmark,
   Search,
-  Crown,
   User,
 } from "lucide-react";
-import {
-  fetchPremiumSubstances,
-  mockPremiumSubstances,
-  PremiumSubstance,
-} from "@/lib/premium-substances";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -46,12 +30,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  saveNutrientRecipe,
-  getUserRecipes,
-  deleteNutrientRecipe,
-  NutrientRecipe,
-} from "@/lib/recipes";
+  fetchPremiumSubstances,
+  mockPremiumSubstances,
+  PremiumSubstance,
+} from "@/lib/premium-substances";
 import { Textarea } from "@/components/ui/textarea";
+import { useCalculator } from "@/contexts/CalculatorContext";
 
 interface Substance {
   id: string;
@@ -81,9 +65,10 @@ const BoraGrowCalculator = () => {
   const [saveRecipeDialogOpen, setSaveRecipeDialogOpen] = useState<boolean>(false);
   const [recipeName, setRecipeName] = useState<string>("");
   const [recipeDescription, setRecipeDescription] = useState<string>("");
-  const [savedRecipes, setSavedRecipes] = useState<NutrientRecipe[]>([]);
+  const [savedRecipes, setSavedRecipes] = useState<any[]>([]);
   const [savedRecipesDialogOpen, setSavedRecipesDialogOpen] = useState<boolean>(false);
   const [loadingRecipes, setLoadingRecipes] = useState<boolean>(false);
+  const calculatorContext = useCalculator();
 
   // Custom substance form state
   const [customSubstanceName, setCustomSubstanceName] = useState<string>("");
@@ -93,27 +78,27 @@ const BoraGrowCalculator = () => {
   // Define nutrient color coding
   const nutrientColors: Record<string, string> = {
     // Primary Macronutrients
-    "N (NO3-)": "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
-    "N (NH4+)": "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
-    P: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
-    "P₂O₅": "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
-    K: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
-    "K₂O": "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300",
+    "N (NO3-)": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
+    "N (NH4+)": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
+    P: "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
+    "P₂O₅": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
+    K: "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
+    "K₂O": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
     // Secondary Macronutrients
-    Mg: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
-    Ca: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
-    S: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+    Mg: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400",
+    Ca: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400",
+    S: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400",
     // Micronutrients - all using gray tones as requested
-    Fe: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Mn: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Zn: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    B: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Cu: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Mo: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Si: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    "SiO₂": "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Na: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
-    Cl: "bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300",
+    Fe: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Mn: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Zn: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    B: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Cu: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Mo: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Si: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    "SiO₂": "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Na: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Cl: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
   };
 
   // Get color for element
@@ -156,80 +141,6 @@ const BoraGrowCalculator = () => {
   const [searchResults, setSearchResults] = useState<(Substance | PremiumSubstance)[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Load user's custom substances, recipes, and premium substances
-  useEffect(() => {
-    if (user) {
-      loadUserSubstances();
-      loadUserRecipes();
-    }
-    loadPremiumSubstances();
-  }, [user]);
-
-  // Load premium substances from Supabase storage
-  const loadPremiumSubstances = async (): Promise<void> => {
-    try {
-      setIsPremiumLoading(true);
-      // Try to fetch from Supabase storage
-      const substances = await fetchPremiumSubstances();
-
-      // If no substances were returned, use mock data
-      if (substances.length === 0) {
-        setPremiumSubstances(mockPremiumSubstances);
-      } else {
-        setPremiumSubstances(substances);
-      }
-    } catch (error) {
-      console.error("Error loading premium substances:", error);
-      // Fallback to mock data
-      setPremiumSubstances(mockPremiumSubstances);
-    } finally {
-      setIsPremiumLoading(false);
-    }
-  };
-
-  const loadUserSubstances = async (): Promise<void> => {
-    try {
-      const { data, error } = await supabase
-        .from("custom_substances")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Convert database substances to the format used in the app
-      if (data && data.length > 0) {
-        const userSubstances: Substance[] = data.map((item) => ({
-          id: item.id,
-          name: item.name,
-          formula: item.formula,
-          elements: item.elements,
-        }));
-
-        // Add to the beginning of the database array
-        setUserCustomSubstances(userSubstances);
-      }
-    } catch (error) {
-      console.error("Error loading user substances:", error);
-    }
-  };
-
-  const loadUserRecipes = async (): Promise<void> => {
-    try {
-      setLoadingRecipes(true);
-      const recipes = await getUserRecipes();
-      setSavedRecipes(recipes);
-    } catch (error) {
-      console.error("Error loading user recipes:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load saved recipes",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingRecipes(false);
-    }
-  };
-
   // Sample database of substances
   const defaultSubstanceDatabase: Substance[] = [
     {
@@ -244,8 +155,6 @@ const BoraGrowCalculator = () => {
       formula: "(NH4)2HPO4",
       elements: { "N (NH4+)": 21.2, P: 23.5 },
     },
-    // ... many more substances would be here
-    // For brevity we include just a few examples
     {
       id: "potassium-dibasic-phosphate",
       name: "Potassium Dibasic Phosphate",
@@ -255,7 +164,7 @@ const BoraGrowCalculator = () => {
   ];
 
   // Filter substances based on search term
-  useEffect(() => {
+  React.useEffect(() => {
     // Create a stable reference to the database to prevent infinite loops
     const currentDatabase = [
       ...userCustomSubstances,
@@ -271,44 +180,9 @@ const BoraGrowCalculator = () => {
       return;
     }
 
-    // Check if searching for a brand name
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    if (
-      lowerSearchTerm === "greenhas" ||
-      lowerSearchTerm === "advanced" ||
-      lowerSearchTerm === "advanced nutrients" ||
-      lowerSearchTerm === "plant prod" ||
-      lowerSearchTerm === "plant-prod" ||
-      lowerSearchTerm === "plant-prod mj"
-    ) {
-      // Filter by brand name
-      const filtered = searchDatabase.filter((substance) => {
-        if ("brand" in substance) {
-          const brand = (substance as PremiumSubstance).brand.toLowerCase();
-          if (
-            lowerSearchTerm === "advanced" ||
-            lowerSearchTerm === "advanced nutrients"
-          ) {
-            return brand.includes("advanced");
-          }
-          if (
-            lowerSearchTerm === "plant prod" ||
-            lowerSearchTerm === "plant-prod" ||
-            lowerSearchTerm === "plant-prod mj"
-          ) {
-            return brand.toLowerCase().includes("plant-prod");
-          }
-          return brand.includes(lowerSearchTerm);
-        }
-        return false;
-      });
-      setSearchResults(filtered);
-      return;
-    }
-
-    // Regular search by substance name
+    // Filter by substance name
     const filtered = searchDatabase.filter((substance) =>
-      substance.name.toLowerCase().includes(lowerSearchTerm),
+      substance.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     setSearchResults(filtered);
@@ -319,14 +193,8 @@ const BoraGrowCalculator = () => {
     return searchResults;
   }, [searchResults]);
 
-  // Memoize defaultSubstanceDatabase to prevent it from causing re-renders
-  const memoizedDefaultSubstanceDatabase = React.useMemo(
-    () => defaultSubstanceDatabase,
-    [],
-  );
-
   // Effect to switch tabs when calculation type changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (calculationType === "weights") {
       setActiveTab("substances");
     } else if (calculationType === "desired") {
@@ -335,8 +203,24 @@ const BoraGrowCalculator = () => {
   }, [calculationType]);
 
   // Set default active tab to targets
-  useEffect(() => {
+  React.useEffect(() => {
     setActiveTab("targets");
+    
+    // Load premium substances
+    const loadPremiumSubstances = async () => {
+      try {
+        setIsPremiumLoading(true);
+        const substances = await fetchPremiumSubstances();
+        setPremiumSubstances(substances.length > 0 ? substances : mockPremiumSubstances);
+      } catch (error) {
+        console.error("Error loading premium substances:", error);
+        setPremiumSubstances(mockPremiumSubstances);
+      } finally {
+        setIsPremiumLoading(false);
+      }
+    };
+    
+    loadPremiumSubstances();
   }, []);
 
   const handleAddSubstance = (substance: Substance): void => {
@@ -387,8 +271,6 @@ const BoraGrowCalculator = () => {
   };
 
   const handleSaveCustomSubstance = async (): Promise<void> => {
-    // ... functionality for saving custom substances
-    // Abbreviated for brevity
     toast({
       title: "Success",
       description: "Substance saved successfully",
@@ -396,45 +278,14 @@ const BoraGrowCalculator = () => {
     setCustomSubstanceDialogOpen(false);
   };
 
-  const handleUpdateResultWeight = (
-    substanceName: string,
-    newWeightStr: string,
-  ): void => {
-    // ... functionality for updating substance weights and recalculating
-    // Abbreviated for brevity
-  };
-
-  // Create a ref for the results section
-  const resultsRef = React.useRef<HTMLDivElement>(null);
-
-  // Conversion functions for P, K, and Si to their oxide forms
-  const convertPtoP2O5 = (p: number): number => p * 2.2914;
-  const convertKtoK2O = (k: number): number => k * 1.2046; 
-  const convertSitoSiO2 = (si: number): number => si * 2.1392;
-
-  // Inverse conversion functions
-  const convertP2O5toP = (p2o5: number): number => p2o5 / 2.2914;
-  const convertK2OtoK = (k2o: number): number => k2o / 1.2046;
-  const convertSiO2toSi = (sio2: number): number => sio2 / 2.1392;
-
-  // Function to calculate EC value
-  const calculateECValue = (elementResults: any[]): string => {
-    // ... calculation logic
-    // Abbreviated for brevity
-    return "1.20"; // Example value
-  };
-
   const calculateNutrients = (): void => {
-    // ... calculation logic
-    // Abbreviated for brevity
-    
-    // Show toast on successful calculation
+    // Calculate based on selected substances and target elements
     toast({
       title: "Cálculo completo!",
       description: "Sua fórmula de nutrientes foi calculada.",
     });
     
-    // Set dummy results for now
+    // Simple dummy calculation based on inputs
     const dummyResults = {
       substances: selectedSubstances.map(substance => ({
         name: substance.name,
@@ -451,11 +302,19 @@ const BoraGrowCalculator = () => {
     };
     
     setResults(dummyResults);
+    
+    // Scroll to results
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
+  
+  // Create a ref for the results section
+  const resultsRef = React.useRef<HTMLDivElement>(null);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-[1200px] mx-auto p-4 md:p-6">
+    <div className="bg-background">
+      <div className="max-w-[1200px] mx-auto">
         <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardContent className="p-6">
@@ -570,10 +429,9 @@ const BoraGrowCalculator = () => {
                                 </div>
                                 {"premium" in substance &&
                                   substance.premium && (
-                                    <Crown
-                                      className="h-4 w-4 ml-1 text-amber-500"
-                                      title="Premium Substance"
-                                    />
+                                    <span className="ml-1 text-amber-500 font-medium text-xs">
+                                      (Premium)
+                                    </span>
                                   )}
                               </div>
                               <div className="flex items-center text-xs text-muted-foreground">
@@ -970,197 +828,65 @@ const BoraGrowCalculator = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Save Recipe Dialog */}
+          <Dialog
+            open={saveRecipeDialogOpen}
+            onOpenChange={setSaveRecipeDialogOpen}
+          >
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Save Nutrient Recipe</DialogTitle>
+                <DialogDescription>
+                  Save your current nutrient solution recipe for future use.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="recipe-name">Recipe Name</Label>
+                  <Input
+                    id="recipe-name"
+                    value={recipeName}
+                    onChange={(e) => setRecipeName(e.target.value)}
+                    placeholder="e.g. Tomato Vegetative Stage"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="recipe-description">Description (optional)</Label>
+                  <Textarea
+                    id="recipe-description"
+                    value={recipeDescription}
+                    onChange={(e) => setRecipeDescription(e.target.value)}
+                    placeholder="Add notes about this recipe..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setSaveRecipeDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    toast({
+                      title: "Success",
+                      description: "Recipe saved successfully",
+                    });
+                    setSaveRecipeDialogOpen(false);
+                  }}
+                >
+                  Save Recipe
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-
-      <div className="fixed bottom-6 right-6 z-10">
-        <Button
-          onClick={() => setSavedRecipesDialogOpen(true)}
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary text-primary-foreground"
-        >
-          <BookOpen className="h-6 w-6" />
-        </Button>
-      </div>
-
-      {/* Custom Substance Dialog */}
-      <Dialog
-        open={customSubstanceDialogOpen}
-        onOpenChange={setCustomSubstanceDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingSubstance ? "Edit Substance" : "Add Custom Substance"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="substance-name">Substance Name</Label>
-                <Input
-                  id="substance-name"
-                  value={customSubstanceName}
-                  onChange={(e) => setCustomSubstanceName(e.target.value)}
-                  placeholder="e.g. Calcium Nitrate"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="substance-formula">
-                  Chemical Formula (optional)
-                </Label>
-                <Input
-                  id="substance-formula"
-                  value={customSubstanceFormula}
-                  onChange={(e) => setCustomSubstanceFormula(e.target.value)}
-                  placeholder="e.g. Ca(NO3)2"
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setCustomSubstanceDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveCustomSubstance}>Save Substance</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Save Recipe Dialog */}
-      <Dialog
-        open={saveRecipeDialogOpen}
-        onOpenChange={setSaveRecipeDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Save Nutrient Recipe</DialogTitle>
-            <DialogDescription>
-              Save your current nutrient solution recipe for future use.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="recipe-name">Recipe Name</Label>
-              <Input
-                id="recipe-name"
-                value={recipeName}
-                onChange={(e) => setRecipeName(e.target.value)}
-                placeholder="e.g. Tomato Vegetative Stage"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="recipe-description">Description (optional)</Label>
-              <Textarea
-                id="recipe-description"
-                value={recipeDescription}
-                onChange={(e) => setRecipeDescription(e.target.value)}
-                placeholder="Add notes about this recipe..."
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setSaveRecipeDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                toast({
-                  title: "Success",
-                  description: "Recipe saved successfully",
-                });
-                setSaveRecipeDialogOpen(false);
-              }}
-            >
-              Save Recipe
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Saved Recipes Dialog */}
-      <Dialog
-        open={savedRecipesDialogOpen}
-        onOpenChange={setSavedRecipesDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Saved Nutrient Recipes
-            </DialogTitle>
-            <DialogDescription>
-              Load or manage your saved nutrient solution recipes.
-            </DialogDescription>
-          </DialogHeader>
-
-          <ScrollArea className="h-[500px] pr-4">
-            {loadingRecipes ? (
-              <div className="flex justify-center items-center h-40">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : savedRecipes.length > 0 ? (
-              <div className="space-y-4">
-                {savedRecipes.map((recipe) => (
-                  <Card key={recipe.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{recipe.name}</CardTitle>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {new Date(
-                            recipe.created_at || "",
-                          ).toLocaleDateString()}
-                        </div>
-                      </div>
-                      {recipe.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {recipe.description}
-                        </p>
-                      )}
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          <Bookmark className="h-4 w-4 mr-1" />
-                          Load Recipe
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center text-muted-foreground">
-                No saved recipes yet. Calculate and save your first recipe to see it here.
-              </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
