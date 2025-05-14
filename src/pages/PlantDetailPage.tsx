@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -14,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, Trash, Edit, ChartLineUp, Upload } from 'lucide-react';
+import { ArrowLeft, Trash, Edit, ChartLine, Upload } from 'lucide-react';
 
 const PlantDetailPage: React.FC = () => {
   const { t } = useTranslation();
@@ -265,7 +264,7 @@ const PlantDetailPage: React.FC = () => {
             <Tabs defaultValue="stats" className="mt-6">
               <TabsList>
                 <TabsTrigger value="stats">
-                  <ChartLineUp className="h-4 w-4 mr-2" />
+                  <ChartLine className="h-4 w-4 mr-2" />
                   Stats
                 </TabsTrigger>
               </TabsList>
