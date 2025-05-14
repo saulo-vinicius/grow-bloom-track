@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CalculatorInputs {
@@ -71,9 +71,9 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     const { plantType, growthPhase, environment, waterQuality, lightIntensity, plantSize, containerSize } = inputs;
     
     // Simple algorithm to generate results based on inputs
-    const baseNutrientA = 7; // Default to vegetable value
-    const baseNutrientB = 7; // Default to vegetative value
-    const baseNutrientC = 5; // Default to indoor value
+    const baseNutrientA = plantType === 'herb' ? 5 : plantType === 'vegetable' ? 7 : 10;
+    const baseNutrientB = growthPhase === 'seedling' ? 3 : growthPhase === 'vegetative' ? 7 : 10;
+    const baseNutrientC = environment === 'indoor' ? 5 : 8;
     
     // Apply some modifications based on other factors
     const nutrientA = baseNutrientA * (plantSize / 30) * (containerSize / 5);
@@ -82,11 +82,11 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     
     // Generate other values
     const ph = waterQuality * 0.8;
-    const wateringFrequency = 2; // Default to indoor watering frequency
-    const lightHours = 16; // Default to vegetative light hours
+    const wateringFrequency = environment === 'indoor' ? 2 : 3;
+    const lightHours = growthPhase === 'seedling' ? 14 : growthPhase === 'vegetative' ? 16 : 12;
     
-    const expectedYield = calculateExpectedYield(plantSize, lightIntensity);
-    const growthTime = "10 weeks"; // Default growth time
+    const expectedYield = calculateExpectedYield(plantType, plantSize, lightIntensity);
+    const growthTime = calculateGrowthTime(plantType, growthPhase, environment);
     
     const calculationResults: CalculatorResults = {
       nutrientA: parseFloat(nutrientA.toFixed(2)),
@@ -101,8 +101,9 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     
     setResults(calculationResults);
     
-    // Set isPremiumCalculation to true to make it a premium feature
-    setIsPremiumCalculation(true);
+    // Determine if this is a premium calculation
+    const isPremium = plantType !== 'herb' || growthPhase === 'flowering';
+    setIsPremiumCalculation(isPremium);
     
     toast({
       title: "Calculation complete!",
@@ -110,9 +111,44 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     });
   };
 
-  const calculateExpectedYield = (plantSize: number, lightIntensity: number): string => {
-    // Simplified yield calculation
-    return `${Math.round(plantSize * 1.2 * (lightIntensity / 50))} grams`;
+  const calculateExpectedYield = (plantType: string, plantSize: number, lightIntensity: number): string => {
+    let yield1 = '';
+    
+    if (plantType === 'herb') {
+      yield1 = `${Math.round(plantSize * 0.5 * (lightIntensity / 50))} grams`;
+    } else if (plantType === 'vegetable') {
+      yield1 = `${Math.round(plantSize * 1.2 * (lightIntensity / 50))} grams`;
+    } else {
+      yield1 = `${Math.round(plantSize * 2 * (lightIntensity / 50))} grams`;
+    }
+    
+    return yield1;
+  };
+
+  const calculateGrowthTime = (plantType: string, growthPhase: string, environment: string): string => {
+    let baseWeeks = 0;
+    
+    if (plantType === 'herb') {
+      baseWeeks = 6;
+    } else if (plantType === 'vegetable') {
+      baseWeeks = 10;
+    } else {
+      baseWeeks = 14;
+    }
+    
+    if (growthPhase === 'seedling') {
+      baseWeeks = Math.round(baseWeeks * 0.3);
+    } else if (growthPhase === 'vegetative') {
+      baseWeeks = Math.round(baseWeeks * 0.6);
+    } else {
+      baseWeeks = baseWeeks;
+    }
+    
+    if (environment === 'outdoor') {
+      baseWeeks = Math.round(baseWeeks * 1.2);
+    }
+    
+    return `${baseWeeks} weeks`;
   };
 
   const saveRecipe = async (name: string) => {

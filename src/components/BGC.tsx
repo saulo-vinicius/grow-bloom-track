@@ -4,16 +4,18 @@ import { useTranslation } from '../i18n/i18nContext';
 import { useCalculator } from '../contexts/CalculatorContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlants } from '../contexts/PlantContext';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";  // Updated import path
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calculator, Save, ChevronRight, Trash, Check } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calculator, Lock, Save, ChevronRight, Trash, Check } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 const BGC: React.FC = () => {
@@ -39,13 +41,22 @@ const BGC: React.FC = () => {
   
   const handleCalculate = () => {
     calculateResults();
-    toast({
-      title: "Calculation complete",
-      description: "Your nutrient formula is ready!",
-    });
+    if (isPremiumCalculation && !user?.isPremium) {
+      setShowPremiumDialog(true);
+    } else {
+      toast({
+        title: "Calculation complete",
+        description: "Your nutrient formula is ready!",
+      });
+    }
   };
   
   const handleSaveRecipe = () => {
+    if (!user?.isPremium && isPremiumCalculation) {
+      setShowPremiumDialog(true);
+      return;
+    }
+    
     if (recipeName.trim()) {
       saveRecipe(recipeName);
       setRecipeName('');
@@ -63,6 +74,11 @@ const BGC: React.FC = () => {
   };
   
   const handleApplyToPlant = () => {
+    if (!user?.isPremium && isPremiumCalculation) {
+      setShowPremiumDialog(true);
+      return;
+    }
+    
     if (selectedPlant) {
       applyRecipeToPlant('current', selectedPlant);
       toast({
@@ -109,10 +125,106 @@ const BGC: React.FC = () => {
         <TabsContent value="calculator" className="space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle>{t('calc.plantType')}</CardTitle>
+            </CardHeader>
+            
+            <CardContent>
+              <RadioGroup 
+                value={inputs.plantType} 
+                onValueChange={(value) => setInputs({ plantType: value })}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="herb" id="herb" />
+                  <Label htmlFor="herb">Herbs</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="vegetable" id="vegetable" />
+                  <Label htmlFor="vegetable">Vegetables</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="fruit" id="fruit" />
+                  <Label htmlFor="fruit">Fruits</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('calc.growthPhase')}</CardTitle>
+            </CardHeader>
+            
+            <CardContent>
+              <RadioGroup 
+                value={inputs.growthPhase} 
+                onValueChange={(value) => setInputs({ growthPhase: value })}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="seedling" id="seedling" />
+                  <Label htmlFor="seedling">Seedling</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="vegetative" id="vegetative" />
+                  <Label htmlFor="vegetative">Vegetative</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="flowering" id="flowering" />
+                  <Label htmlFor="flowering">Flowering</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('calc.environment')}</CardTitle>
+            </CardHeader>
+            
+            <CardContent>
+              <RadioGroup 
+                value={inputs.environment} 
+                onValueChange={(value) => setInputs({ environment: value })}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="indoor" id="indoor" />
+                  <Label htmlFor="indoor">{t('plant.indoor')}</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="outdoor" id="outdoor" />
+                  <Label htmlFor="outdoor">{t('plant.outdoor')}</Label>
+                </div>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
               <CardTitle>{t('calc.waterQuality')}</CardTitle>
             </CardHeader>
             
-            <CardContent className="space-y-4">              
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label>pH Value ({inputs.waterQuality})</Label>
+                  <span className="text-sm text-muted-foreground">{inputs.waterQuality}</span>
+                </div>
+                <Slider 
+                  value={[inputs.waterQuality]} 
+                  min={4} 
+                  max={9} 
+                  step={0.1}
+                  onValueChange={(value) => setInputs({ waterQuality: value[0] })}
+                />
+              </div>
+              
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <Label>Light Intensity (%)</Label>
@@ -167,123 +279,114 @@ const BGC: React.FC = () => {
           </Card>
           
           {results && (
-            <div className="relative">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('calc.results')}</CardTitle>
-                  <CardDescription>{t('calc.recommended')}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">                
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Nutrient A</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientA} ml/L</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Nutrient B</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientB} ml/L</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Nutrient C</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientC} ml/L</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Target pH</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.ph}</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Watering (times per week)</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.wateringFrequency}</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Light (hours per day)</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.lightHours}</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Expected Yield</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.expectedYield}</div>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <Label className="text-xs">Growth Time</Label>
-                      <div className="text-plantgreen-600 font-semibold text-lg">{results.growthTime}</div>
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="flex flex-col space-y-3">
-                  <div className="w-full flex gap-2">
-                    <Input 
-                      placeholder="Recipe name" 
-                      value={recipeName} 
-                      onChange={(e) => setRecipeName(e.target.value)}
-                    />
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={handleSaveRecipe} 
-                      disabled={!recipeName.trim()}
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {t('calc.saveRecipe')}
-                    </Button>
-                  </div>
-                  
-                  {plants.length > 0 && (
-                    <div className="w-full flex gap-2">
-                      <Select value={selectedPlant} onValueChange={setSelectedPlant}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a plant" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {plants.map(plant => (
-                            <SelectItem key={plant.id} value={plant.id}>{plant.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Button 
-                        variant="outline" 
-                        onClick={handleApplyToPlant}
-                        disabled={!selectedPlant}
-                      >
-                        <ChevronRight className="h-4 w-4 mr-2" />
-                        {t('calc.applyToPlant')}
-                      </Button>
-                    </div>
-                  )}
-                </CardFooter>
-              </Card>
+            <Card className={`${isPremiumCalculation && !user?.isPremium ? 'relative overflow-hidden' : ''}`}>
+              <CardHeader>
+                <CardTitle>{t('calc.results')}</CardTitle>
+                <CardDescription>{t('calc.recommended')}</CardDescription>
+              </CardHeader>
               
-              {/* Premium Overlay for Result Card */}
-              {isPremiumCalculation && !user?.isPremium && (
-                <div 
-                  className="absolute inset-0 backdrop-blur-md flex flex-col items-center justify-center bg-black/30 rounded-lg"
-                  onClick={() => setShowPremiumDialog(true)}
-                >
-                  <div className="text-white text-center p-6">
-                    <h3 className="text-xl font-bold mb-2">{t('premium.lockedFeature')}</h3>
-                    <p className="mb-4">{t('premium.unlockFeature')}</p>
+              <CardContent className="space-y-4">
+                {/* Blur overlay for premium calculations */}
+                {isPremiumCalculation && !user?.isPremium && (
+                  <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
+                    <Lock className="h-12 w-12 text-plantgreen-600 mb-2" />
+                    <h3 className="text-lg font-semibold text-center">{t('premium.title')}</h3>
+                    <p className="text-center text-muted-foreground mb-4">{t('premium.subtitle')}</p>
                     <Button 
-                      className="bg-plantgreen-600 hover:bg-plantgreen-700" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowPremiumDialog(true);
-                      }}
+                      className="bg-plantgreen-600 hover:bg-plantgreen-700"
+                      onClick={() => setShowPremiumDialog(true)}
                     >
                       {t('premium.upgrade')}
                     </Button>
                   </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nutrient A</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientA} ml/L</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nutrient B</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientB} ml/L</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Nutrient C</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.nutrientC} ml/L</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Target pH</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.ph}</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Watering (times per week)</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.wateringFrequency}</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Light (hours per day)</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.lightHours}</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Expected Yield</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.expectedYield}</div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs">Growth Time</Label>
+                    <div className="text-plantgreen-600 font-semibold text-lg">{results.growthTime}</div>
+                  </div>
                 </div>
-              )}
-            </div>
+              </CardContent>
+              
+              <CardFooter className="flex flex-col space-y-3">
+                <div className="w-full flex gap-2">
+                  <Input 
+                    placeholder="Recipe name" 
+                    value={recipeName} 
+                    onChange={(e) => setRecipeName(e.target.value)}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSaveRecipe} 
+                    disabled={!recipeName.trim()}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {t('calc.saveRecipe')}
+                  </Button>
+                </div>
+                
+                {plants.length > 0 && (
+                  <div className="w-full flex gap-2">
+                    <Select value={selectedPlant} onValueChange={setSelectedPlant}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a plant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {plants.map(plant => (
+                          <SelectItem key={plant.id} value={plant.id}>{plant.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={handleApplyToPlant}
+                      disabled={!selectedPlant}
+                    >
+                      <ChevronRight className="h-4 w-4 mr-2" />
+                      {t('calc.applyToPlant')}
+                    </Button>
+                  </div>
+                )}
+              </CardFooter>
+            </Card>
           )}
         </TabsContent>
         
