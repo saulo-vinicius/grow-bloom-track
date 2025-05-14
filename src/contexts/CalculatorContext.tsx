@@ -171,15 +171,16 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
     
     try {
       // Try to save to Supabase if user is logged in
-      const user = supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Save to Supabase recipes table
+        // Save to Supabase recipes table - FIX: Add user_id field from current user
         await supabase.from('recipes').insert({
           name,
           data: {
             ...inputs,
             ...results
-          }
+          },
+          user_id: user.id // Add the user_id from the authenticated user
         });
       }
     } catch (error) {
@@ -233,7 +234,7 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
       }
       
       // Try to save to Supabase if user is logged in
-      const user = supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // You can implement this later with actual Supabase connection
       }
