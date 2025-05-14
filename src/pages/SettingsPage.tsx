@@ -2,6 +2,7 @@
 import React from 'react';
 import { useTranslation } from '../i18n/i18nContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Layout from '../components/Layout';
 import LanguageSelector from '../components/LanguageSelector';
 import PremiumFeatures from '../components/PremiumFeatures';
@@ -15,6 +16,7 @@ import { User, Bell, Moon, HelpCircle, LogOut } from 'lucide-react';
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   return (
     <Layout>
@@ -97,7 +99,11 @@ const SettingsPage: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="dark-mode">Dark Mode</Label>
-                  <Switch id="dark-mode" />
+                  <Switch 
+                    id="dark-mode" 
+                    checked={isDarkMode}
+                    onCheckedChange={toggleDarkMode}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
