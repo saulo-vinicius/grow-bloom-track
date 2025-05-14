@@ -94,14 +94,20 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
       if (error) throw error;
       
       if (data) {
-        const recipes = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          createdAt: item.created_at,
-          // Precisamos fazer uma conversão explícita aqui
-          inputs: item.data.inputs as CalcInputs,
-          results: item.data.results as CalcResults
-        }));
+        const recipes = data.map(item => {
+          // Precisamos fazer uma conversão explícita aqui e garantir que data.data seja um objeto
+          const recipeData = typeof item.data === 'string' 
+            ? JSON.parse(item.data)
+            : item.data;
+            
+          return {
+            id: item.id,
+            name: item.name,
+            createdAt: item.created_at,
+            inputs: recipeData.inputs as CalcInputs,
+            results: recipeData.results as CalcResults
+          };
+        });
         setSavedRecipes(recipes);
       }
     } catch (error) {
@@ -411,7 +417,7 @@ export const AdvancedCalculatorProvider: React.FC<{ children: ReactNode }> = ({ 
         .from('recipes')
         .insert({
           name,
-          data: recipeData as any, // Usamos 'as any' para contornar o problema de tipagem
+          data: recipeData, // O Supabase vai serializar isso automaticamente
           user_id: user.id
         })
         .select();

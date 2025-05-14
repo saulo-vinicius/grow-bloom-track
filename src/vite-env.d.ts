@@ -1,5 +1,5 @@
 
 /// <reference types="vite/client" />
 
-// Adicionando definição de tipo para as chaves de tradução
+// Modificando a definição de tipo para TranslationKey para aceitar qualquer string
 declare type TranslationKey = string;
