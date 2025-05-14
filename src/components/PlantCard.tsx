@@ -13,14 +13,18 @@ interface PlantCardProps {
 
 const PlantCard: React.FC<PlantCardProps> = ({ plant }) => {
   const { t } = useTranslation();
-  const latestStat = plant.stats[0];
+  const latestStat = plant.stats?.[0] || {
+    temperature: 0,
+    humidity: 0,
+    ppm: 0
+  };
 
   return (
     <Link to={`/plants/${plant.id}`}>
       <Card className="plant-card h-full">
         <div className="aspect-square relative overflow-hidden">
           <img 
-            src={plant.imageUrl} 
+            src={plant.image_url} 
             alt={plant.name} 
             className="object-cover w-full h-full transition-transform hover:scale-105 duration-300"
           />
@@ -54,7 +58,7 @@ const PlantCard: React.FC<PlantCardProps> = ({ plant }) => {
         </CardContent>
         
         <CardFooter className="px-4 py-2 text-xs text-muted-foreground border-t">
-          {t('plants.lastUpdate')}: {format(new Date(plant.lastUpdated), 'MMM dd, yyyy')}
+          {t('plants.lastUpdate')}: {plant.lastUpdated ? format(new Date(plant.lastUpdated), 'MMM dd, yyyy') : '-'}
         </CardFooter>
       </Card>
     </Link>

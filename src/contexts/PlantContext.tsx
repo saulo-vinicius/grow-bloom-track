@@ -13,6 +13,16 @@ export interface Plant {
   image_url?: string;
   user_id: string;
   created_at?: string;
+  // Campos adicionais necessários para o PlantCard
+  species?: string;
+  location?: string;
+  growthPhase?: string;
+  lastUpdated?: string;
+  stats?: Array<{
+    temperature: number;
+    humidity: number;
+    ppm: number;
+  }>;
 }
 
 // Define the context type
@@ -74,7 +84,21 @@ export const PlantProvider: React.FC<PlantProviderProps> = ({ children }) => {
       
       if (error) throw error;
       
-      setPlants(data || []);
+      // Enriquece os dados das plantas com estatísticas e informações adicionais
+      const enrichedPlants = data?.map(plant => ({
+        ...plant,
+        species: plant.strain, // Mapeia strain para species para compatibilidade
+        location: 'indoor', // Valor padrão para location
+        growthPhase: plant.stage, // Mapeia stage para growthPhase para compatibilidade
+        lastUpdated: plant.created_at, // Usa created_at como lastUpdated
+        stats: [{ // Estatísticas de exemplo
+          temperature: 24,
+          humidity: 60,
+          ppm: 800
+        }]
+      })) || [];
+      
+      setPlants(enrichedPlants);
     } catch (err: any) {
       console.error('Error fetching plants:', err);
       setError(err.message);

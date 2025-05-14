@@ -1,3 +1,4 @@
+
 // Define the available locales
 export type Locale = 'en' | 'pt' | 'es';
 
@@ -12,9 +13,12 @@ export type TranslationKey =
   | 'calc.results' | 'calc.recommended' | 'calc.saveRecipe' | 'calc.applyToPlant'
   | 'plant.herb' | 'plant.vegetable' | 'plant.fruit' | 'plant.seedling'
   | 'plant.vegetative' | 'plant.flowering' | 'plant.indoor' | 'plant.outdoor'
+  | 'plant.temperature' | 'plant.humidity' | 'plant.ppm' | 'plant.growthPhase'
+  | 'plants.lastUpdate'
   | 'premium.title' | 'premium.subtitle' | 'premium.upgrade' | 'premium.maxSubstances'
   | 'premium.feature1' | 'premium.feature2' | 'premium.feature3' | 'premium.price'
-  | 'premium.perMonth';
+  | 'premium.perMonth' | 'premium.alreadyPremium'
+  | 'auth.signin' | 'auth.continue';
 
 // Define the translations object
 export const translations: Record<Locale, Record<TranslationKey, string>> = {
@@ -56,6 +60,11 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'plant.flowering': 'Flowering',
     'plant.indoor': 'Indoor',
     'plant.outdoor': 'Outdoor',
+    'plant.temperature': 'Temperature',
+    'plant.humidity': 'Humidity',
+    'plant.ppm': 'PPM',
+    'plant.growthPhase': 'Growth Phase',
+    'plants.lastUpdate': 'Last update',
     'premium.title': 'Premium Feature',
     'premium.subtitle': 'Upgrade to access advanced features',
     'premium.upgrade': 'Upgrade to Premium',
@@ -64,7 +73,10 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'premium.feature2': 'Custom substance database',
     'premium.feature3': 'Advanced plant metrics',
     'premium.price': '$9.99',
-    'premium.perMonth': 'per month'
+    'premium.perMonth': 'per month',
+    'premium.alreadyPremium': 'You already have Premium',
+    'auth.signin': 'Signed in',
+    'auth.continue': 'You can continue'
   },
   pt: {
     // Portuguese translations
@@ -105,6 +117,11 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'plant.flowering': 'Floração',
     'plant.indoor': 'Interior',
     'plant.outdoor': 'Exterior',
+    'plant.temperature': 'Temperatura',
+    'plant.humidity': 'Umidade',
+    'plant.ppm': 'PPM',
+    'plant.growthPhase': 'Fase de Crescimento',
+    'plants.lastUpdate': 'Última atualização',
     'premium.title': 'Recurso Premium',
     'premium.subtitle': 'Atualize para acessar recursos avançados',
     'premium.upgrade': 'Upgrade para Premium',
@@ -113,7 +130,10 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'premium.feature2': 'Banco de dados de substâncias personalizadas',
     'premium.feature3': 'Métricas avançadas de plantas',
     'premium.price': 'R$49,99',
-    'premium.perMonth': 'por mês'
+    'premium.perMonth': 'por mês',
+    'premium.alreadyPremium': 'Você já tem Premium',
+    'auth.signin': 'Conectado',
+    'auth.continue': 'Você pode continuar'
   },
   es: {
     // Spanish translations
@@ -154,6 +174,11 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'plant.flowering': 'Floración',
     'plant.indoor': 'Interior',
     'plant.outdoor': 'Exterior',
+    'plant.temperature': 'Temperatura',
+    'plant.humidity': 'Humedad',
+    'plant.ppm': 'PPM',
+    'plant.growthPhase': 'Fase de Crecimiento',
+    'plants.lastUpdate': 'Última actualización',
     'premium.title': 'Función Premium',
     'premium.subtitle': 'Actualice para acceder a funciones avanzadas',
     'premium.upgrade': 'Actualizar a Premium',
@@ -162,6 +187,9 @@ export const translations: Record<Locale, Record<TranslationKey, string>> = {
     'premium.feature2': 'Base de datos de sustancias personalizadas',
     'premium.feature3': 'Métricas avanzadas de plantas',
     'premium.price': '€9,99',
-    'premium.perMonth': 'por mes'
+    'premium.perMonth': 'por mes',
+    'premium.alreadyPremium': 'Ya tienes Premium',
+    'auth.signin': 'Conectado',
+    'auth.continue': 'Puedes continuar'
   }
 };
