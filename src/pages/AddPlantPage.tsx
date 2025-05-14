@@ -56,7 +56,14 @@ const AddPlantPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addPlant(formData);
+      // Add missing required properties
+      const plantData = {
+        ...formData,
+        addedOn: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      await addPlant(plantData);
       navigate('/plants');
     } catch (error) {
       console.error('Error adding plant:', error);

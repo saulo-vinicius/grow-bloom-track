@@ -37,7 +37,7 @@ const PremiumFeatures: React.FC = () => {
           {features.map((feature) => (
             <div key={feature.key} className="flex items-center space-x-4">
               {feature.icon}
-              <span>{t(feature.key)}</span>
+              <span>{t(feature.key as any)}</span>
             </div>
           ))}
         </div>
