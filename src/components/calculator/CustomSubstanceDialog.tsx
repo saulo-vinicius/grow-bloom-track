@@ -12,7 +12,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
+import { Substance } from "@/types/calculator";
 
 interface CustomSubstanceDialogProps {
   open: boolean;
@@ -24,8 +26,27 @@ interface CustomSubstanceDialogProps {
   setCustomSubstanceFormula: (formula: string) => void;
   customSubstanceElements: Record<string, number>;
   setCustomSubstanceElements: (elements: Record<string, number>) => void;
-  editingSubstance: any | null;
+  editingSubstance: Substance | null;
 }
+
+const COMMON_ELEMENTS = [
+  { value: "N (NO3-)", label: "N (NO3-)" },
+  { value: "N (NH4+)", label: "N (NH4+)" },
+  { value: "P", label: "P" },
+  { value: "K", label: "K" },
+  { value: "Mg", label: "Mg" },
+  { value: "Ca", label: "Ca" },
+  { value: "S", label: "S" },
+  { value: "Fe", label: "Fe" },
+  { value: "Mn", label: "Mn" },
+  { value: "Zn", label: "Zn" },
+  { value: "B", label: "B" },
+  { value: "Cu", label: "Cu" },
+  { value: "Si", label: "Si" },
+  { value: "Mo", label: "Mo" },
+  { value: "Na", label: "Na" },
+  { value: "Cl", label: "Cl" },
+];
 
 const CustomSubstanceDialog: React.FC<CustomSubstanceDialogProps> = ({
   open,
@@ -39,6 +60,24 @@ const CustomSubstanceDialog: React.FC<CustomSubstanceDialogProps> = ({
   setCustomSubstanceElements,
   editingSubstance,
 }) => {
+  const [newElement, setNewElement] = useState<string>("");
+
+  const handleAddElement = () => {
+    if (!newElement) {
+      const randomElement = "Elemento-" + Object.keys(customSubstanceElements).length + 1;
+      setCustomSubstanceElements({
+        ...customSubstanceElements,
+        [randomElement]: 0,
+      });
+    } else {
+      setCustomSubstanceElements({
+        ...customSubstanceElements,
+        [newElement]: 0,
+      });
+      setNewElement("");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
@@ -121,20 +160,28 @@ const CustomSubstanceDialog: React.FC<CustomSubstanceDialogProps> = ({
                     </div>
                   ))}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      setCustomSubstanceElements({
-                        ...customSubstanceElements,
-                        [`Elemento-${Object.keys(customSubstanceElements).length + 1}`]: 0,
-                      });
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Elemento
-                  </Button>
+                  <div className="flex items-center gap-2 mt-3">
+                    <Select value={newElement} onValueChange={setNewElement}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione um elemento" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COMMON_ELEMENTS.map((element) => (
+                          <SelectItem key={element.value} value={element.value}>
+                            {element.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleAddElement}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adicionar
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

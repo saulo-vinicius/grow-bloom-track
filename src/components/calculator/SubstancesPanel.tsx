@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, User, Search } from "lucide-react";
 import { PremiumSubstance } from "@/lib/premium-substances";
+import { Substance, SelectedSubstance } from "@/types/calculator";
 
 interface SubstancesPanelProps {
   searchTerm: string;
@@ -17,17 +18,6 @@ interface SubstancesPanelProps {
   openCustomSubstanceDialog: (substance?: Substance) => void;
   userCustomSubstances: Substance[];
   getElementColor: (element: string) => string;
-}
-
-interface Substance {
-  id: string;
-  name: string;
-  formula?: string;
-  elements: Record<string, number>;
-}
-
-interface SelectedSubstance extends Substance {
-  weight: number;
 }
 
 const SubstancesPanel: React.FC<SubstancesPanelProps> = ({
