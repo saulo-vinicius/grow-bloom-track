@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -148,8 +147,14 @@ const BoraGrowCalculator = () => {
   const [searchResults, setSearchResults] = useState<(Substance | PremiumSubstance)[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Sample database of substances
+  // Expanded sample database of substances
   const defaultSubstanceDatabase: Substance[] = [
+    {
+      id: "ammonium-nitrate",
+      name: "Ammonium Nitrate",
+      formula: "NH4NO3",
+      elements: { "N (NH4+)": 17.5, "N (NO3-)": 17.5 },
+    },
     {
       id: "ammonium-chloride",
       name: "Ammonium Chloride",
@@ -167,6 +172,78 @@ const BoraGrowCalculator = () => {
       name: "Potassium Dibasic Phosphate",
       formula: "K2HPO4",
       elements: { K: 44.9, P: 17.8 },
+    },
+    {
+      id: "potassium-nitrate",
+      name: "Potassium Nitrate",
+      formula: "KNO3",
+      elements: { K: 38.7, "N (NO3-)": 13.9 },
+    },
+    {
+      id: "calcium-nitrate",
+      name: "Calcium Nitrate",
+      formula: "Ca(NO3)2",
+      elements: { Ca: 19.0, "N (NO3-)": 15.5 },
+    },
+    {
+      id: "magnesium-sulfate",
+      name: "Magnesium Sulfate (Epsom Salt)",
+      formula: "MgSO4·7H2O",
+      elements: { Mg: 9.8, S: 13.0 },
+    },
+    {
+      id: "calcium-chloride",
+      name: "Calcium Chloride",
+      formula: "CaCl2",
+      elements: { Ca: 36.1, Cl: 63.9 },
+    },
+    {
+      id: "potassium-sulfate",
+      name: "Potassium Sulfate",
+      formula: "K2SO4",
+      elements: { K: 45.0, S: 18.4 },
+    },
+    {
+      id: "mono-potassium-phosphate",
+      name: "Mono Potassium Phosphate",
+      formula: "KH2PO4",
+      elements: { K: 28.7, P: 22.8 },
+    },
+    {
+      id: "iron-edta",
+      name: "Iron EDTA",
+      formula: "Fe-EDTA",
+      elements: { Fe: 13.0 },
+    },
+    {
+      id: "manganese-sulfate",
+      name: "Manganese Sulfate",
+      formula: "MnSO4·H2O",
+      elements: { Mn: 32.5, S: 19.0 },
+    },
+    {
+      id: "zinc-sulfate",
+      name: "Zinc Sulfate",
+      formula: "ZnSO4·7H2O",
+      elements: { Zn: 22.7, S: 11.0 },
+    },
+    {
+      id: "copper-sulfate",
+      name: "Copper Sulfate",
+      formula: "CuSO4·5H2O",
+      elements: { Cu: 25.5, S: 12.8 },
+    },
+    {
+      id: "boric-acid",
+      name: "Boric Acid",
+      formula: "H3BO3",
+      elements: { B: 17.5 },
+    },
+    {
+      id: "sodium-molybdate",
+      name: "Sodium Molybdate",
+      formula: "Na2MoO4·2H2O",
+      elements: { Mo: 39.7, Na: 19.5 },
     },
   ];
 
@@ -373,29 +450,79 @@ const BoraGrowCalculator = () => {
       return;
     }
 
-    // Calculate based on selected substances and target elements
+    // Real calculation based on selected substances and target elements
+    // Calculate contribution of each substance to the elements
+    const totalElements: Record<string, number> = {};
+    const contributionBySubstance: Record<string, Record<string, number>> = {};
+    
+    // Initialize totalElements with zeros for all target elements
+    Object.keys(elements).forEach(element => {
+      totalElements[element] = 0;
+    });
+    
+    // Calculate the contribution of each substance to each element
+    selectedSubstances.forEach(substance => {
+      contributionBySubstance[substance.id] = {};
+      
+      // Skip if weight is zero
+      if (substance.weight <= 0) return;
+      
+      // For each element in the substance
+      Object.entries(substance.elements).forEach(([element, percentage]) => {
+        // Calculate contribution in mg (ppm)
+        // Formula: weight (g) * percentage (%) / solution volume (L) * 10 = ppm
+        const contribution = (substance.weight * percentage / 100) / solutionVolume * 1000;
+        
+        // Store contribution for this substance and element
+        contributionBySubstance[substance.id][element] = contribution;
+        
+        // Add to total for this element
+        if (totalElements[element] !== undefined) {
+          totalElements[element] += contribution;
+        } else {
+          totalElements[element] = contribution;
+        }
+      });
+    });
+    
+    // Compare actual values with target values and calculate differences
+    const elementResults = Object.entries(elements).map(([element, target]) => {
+      const actual = totalElements[element] || 0;
+      return {
+        element,
+        target,
+        actual,
+        difference: actual - target
+      };
+    });
+    
+    // Calculate volume per liter for each substance
+    const substanceResults = selectedSubstances.map(substance => {
+      const volumePerLiter = substance.weight / solutionVolume;
+      return {
+        name: substance.name,
+        weight: substance.weight,
+        volumePerLiter
+      };
+    });
+    
+    // Calculate EC value (simplified estimation)
+    // EC is roughly 0.10 mS/cm per 100 ppm of total dissolved solids
+    const totalPpm = Object.values(totalElements).reduce((sum, val) => sum + val, 0);
+    const ecValue = (totalPpm / 100 * 0.10).toFixed(2);
+    
+    const calculationResults = {
+      substances: substanceResults,
+      elements: elementResults,
+      ecValue
+    };
+    
+    setResults(calculationResults);
+    
     toast({
       title: "Cálculo completo!",
       description: "Sua fórmula de nutrientes foi calculada.",
     });
-    
-    // Simple dummy calculation based on inputs
-    const dummyResults = {
-      substances: selectedSubstances.map(substance => ({
-        name: substance.name,
-        weight: substance.weight,
-        volumePerLiter: substance.weight
-      })),
-      elements: Object.entries(elements).map(([element, target]) => ({
-        element,
-        target,
-        actual: target * 0.9, // Just a dummy calculation
-        difference: target * -0.1
-      })),
-      ecValue: "1.20"
-    };
-    
-    setResults(dummyResults);
     
     // Scroll to results
     setTimeout(() => {
