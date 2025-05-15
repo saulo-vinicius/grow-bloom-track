@@ -1,103 +1,191 @@
+import * as React from "react";
 
-import { useState, useEffect, useRef } from "react";
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast";
 
-// Types
-export type ToastVariant = "default" | "destructive" | "success";
-export interface Toast {
+const TOAST_LIMIT = 1;
+const TOAST_REMOVE_DELAY = 1000000;
+
+type ToasterToast = ToastProps & {
   id: string;
-  title?: string;
-  description?: string;
-  action?: React.ReactNode;
-  variant?: ToastVariant;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: ToastActionElement;
+};
+
+const actionTypes = {
+  ADD_TOAST: "ADD_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST",
+  DISMISS_TOAST: "DISMISS_TOAST",
+  REMOVE_TOAST: "REMOVE_TOAST",
+} as const;
+
+let count = 0;
+
+function genId() {
+  count = (count + 1) % Number.MAX_SAFE_INTEGER;
+  return count.toString();
 }
-export type ToastOptions = Omit<Toast, "id">;
-export type ToastActionElement = React.ReactElement<
-  HTMLButtonElement,
-  string | React.JSXElementConstructor<any>
->;
 
-interface UseToastReturn {
-  toasts: Toast[];
-  toast: (options?: ToastOptions) => void;
-  dismiss: (id: string) => void;
-  dismissAll: () => void;
-}
+type ActionType = typeof actionTypes;
 
-// Generate a unique ID for toast
-const generateId = () => Math.random().toString(36).substring(2, 9);
-
-export const useToast = (): UseToastReturn => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map()
-  );
-
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      timersRef.current.forEach((timer) => clearTimeout(timer));
-    };
-  }, []);
-
-  const dismissToast = (id: string) => {
-    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
-    
-    // Clear auto dismiss timer for this toast
-    if (timersRef.current.has(id)) {
-      clearTimeout(timersRef.current.get(id));
-      timersRef.current.delete(id);
+type Action =
+  | {
+      type: ActionType["ADD_TOAST"];
+      toast: ToasterToast;
     }
-  };
+  | {
+      type: ActionType["UPDATE_TOAST"];
+      toast: Partial<ToasterToast>;
+    }
+  | {
+      type: ActionType["DISMISS_TOAST"];
+      toastId?: string;
+    }
+  | {
+      type: ActionType["REMOVE_TOAST"];
+      toastId?: string;
+    };
 
-  const addToast = (options: ToastOptions = {}) => {
-    const id = generateId();
-    const toast = { id, ...options };
-    
-    setToasts((prevToasts) => [...prevToasts, toast]);
-    
-    // Auto dismiss after 5 seconds (5000ms)
-    const timer = setTimeout(() => {
-      dismissToast(id);
-    }, 5000);
-    
-    timersRef.current.set(id, timer);
-    
-    return id;
-  };
+interface State {
+  toasts: ToasterToast[];
+}
 
-  const dismissAllToasts = () => {
-    setToasts([]);
-    timersRef.current.forEach((timer) => clearTimeout(timer));
-    timersRef.current.clear();
-  };
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
+const addToRemoveQueue = (toastId: string) => {
+  if (toastTimeouts.has(toastId)) {
+    return;
+  }
+
+  const timeout = setTimeout(() => {
+    toastTimeouts.delete(toastId);
+    dispatch({
+      type: "REMOVE_TOAST",
+      toastId: toastId,
+    });
+  }, TOAST_REMOVE_DELAY);
+
+  toastTimeouts.set(toastId, timeout);
+};
+
+export const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "ADD_TOAST":
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      };
+
+    case "UPDATE_TOAST":
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t,
+        ),
+      };
+
+    case "DISMISS_TOAST": {
+      const { toastId } = action;
+
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
+      if (toastId) {
+        addToRemoveQueue(toastId);
+      } else {
+        state.toasts.forEach((toast) => {
+          addToRemoveQueue(toast.id);
+        });
+      }
+
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === toastId || toastId === undefined
+            ? {
+                ...t,
+                open: false,
+              }
+            : t,
+        ),
+      };
+    }
+    case "REMOVE_TOAST":
+      if (action.toastId === undefined) {
+        return {
+          ...state,
+          toasts: [],
+        };
+      }
+      return {
+        ...state,
+        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+      };
+  }
+};
+
+const listeners: Array<(state: State) => void> = [];
+
+let memoryState: State = { toasts: [] };
+
+function dispatch(action: Action) {
+  memoryState = reducer(memoryState, action);
+  listeners.forEach((listener) => {
+    listener(memoryState);
+  });
+}
+
+type Toast = Omit<ToasterToast, "id">;
+
+function toast({ ...props }: Toast) {
+  const id = genId();
+
+  const update = (props: ToasterToast) =>
+    dispatch({
+      type: "UPDATE_TOAST",
+      toast: { ...props, id },
+    });
+  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
+
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss();
+      },
+    },
+  });
 
   return {
-    toasts,
-    toast: addToast,
-    dismiss: dismissToast,
-    dismissAll: dismissAllToasts,
+    id,
+    dismiss,
+    update,
   };
-};
+}
 
-export const toast = (options: ToastOptions) => {
-  const toastHelper = {
-    open: () => {
-      // This is just a placeholder as we can't directly call the hook's toast function
-      // The actual toast will be handled by the component using useToast()
-      console.log("Toast triggered:", options);
-    },
+function useToast() {
+  const [state, setState] = React.useState<State>(memoryState);
+
+  React.useEffect(() => {
+    listeners.push(setState);
+    return () => {
+      const index = listeners.indexOf(setState);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    };
+  }, [state]);
+
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   };
-  
-  // When called directly like this, we need to rely on the Toaster component
-  // picking up this call via the event system
-  
-  // Create a custom event to communicate with the Toaster component
-  const event = new CustomEvent("toast-trigger", { 
-    detail: options 
-  });
-  
-  // Dispatch the event
-  document.dispatchEvent(event);
-  
-  return toastHelper;
-};
+}
+
+export { useToast, toast };

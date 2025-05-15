@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { createClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +58,6 @@ interface SelectedSubstance extends Substance {
 }
 
 const BoraGrowCalculator = () => {
-  const supabase = createClient();
   const { user } = useAuth();
   const [calculationType, setCalculationType] = useState<string>("desired");
   const [solutionVolume, setSolutionVolume] = useState<number>(1);
