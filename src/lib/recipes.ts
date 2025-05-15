@@ -11,15 +11,17 @@ export interface NutrientRecipe {
   elements: any[];
   solution_volume: number;
   volume_unit: string;
+  data?: any;
   ec_value?: number;
   user_id?: string;
   created_at?: string;
 }
 
 // Type to handle Supabase data conversion
-type SupabaseNutrientRecipe = Omit<NutrientRecipe, 'substances' | 'elements'> & {
+type SupabaseNutrientRecipe = Omit<NutrientRecipe, 'substances' | 'elements' | 'data'> & {
   substances: Json;
   elements: Json;
+  data: Json;
 };
 
 /**
@@ -29,7 +31,8 @@ const convertSupabaseToNutrientRecipe = (data: SupabaseNutrientRecipe): Nutrient
   return {
     ...data,
     substances: Array.isArray(data.substances) ? data.substances : [],
-    elements: Array.isArray(data.elements) ? data.elements : []
+    elements: Array.isArray(data.elements) ? data.elements : [],
+    data: data.data || null
   };
 };
 
@@ -43,23 +46,39 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
     throw new Error("User not authenticated");
   }
 
-  const recipeData = {
-    ...recipe,
-    user_id: user.id,
-  };
+  try {
+    const recipeData = {
+      ...recipe,
+      user_id: user.id,
+      substances: recipe.substances || [],
+      elements: recipe.elements || [],
+      data: {
+        substances: recipe.substances || [],
+        elements: recipe.elements || [],
+        ecValue: recipe.ec_value || 0,
+        solutionVolume: recipe.solution_volume || 1,
+        volumeUnit: recipe.volume_unit || 'liters',
+      }
+    };
 
-  const { data, error } = await supabase
-    .from("nutrient_recipes")
-    .insert(recipeData)
-    .select()
-    .single();
+    console.log("Saving recipe:", recipeData);
 
-  if (error) {
-    console.error("Error saving recipe:", error);
+    const { data, error } = await supabase
+      .from("nutrient_recipes")
+      .insert(recipeData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error saving recipe:", error);
+      throw error;
+    }
+
+    return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
+  } catch (error) {
+    console.error("Error in saveNutrientRecipe:", error);
     throw error;
   }
-
-  return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
 };
 
 /**

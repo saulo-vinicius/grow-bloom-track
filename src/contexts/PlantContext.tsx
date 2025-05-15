@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { toast } from 'sonner';
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface PlantStat {
   date: string;
@@ -9,6 +9,12 @@ export interface PlantStat {
   humidity: number;
   ppm: number;
   notes?: string;
+  recipeApplied?: {
+    type: string;
+    name: string;
+    description?: string;
+    data?: any;
+  };
 }
 
 export interface Plant {
@@ -204,11 +210,18 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         )
       );
       
-      toast.success('Plant statistics updated!');
+      toast({
+        title: "Sucesso!",
+        description: "Estatísticas da planta atualizadas!"
+      });
     } catch (err) {
       console.error('Error adding plant stat:', err);
       setError('Failed to update plant statistics');
-      toast.error('Failed to update plant statistics');
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar estatísticas da planta",
+        variant: "destructive",
+      });
       throw err;
     }
   };
