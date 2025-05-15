@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -67,11 +68,18 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
       }
 
       // Save the plant and recipe data to Supabase
-      const { error } = await supabase.from("plants").insert([
+      // Instead of using a "plants" table that doesn't exist,
+      // we'll save it to the nutrient_recipes table with a special indicator
+      const { error } = await supabase.from("nutrient_recipes").insert([
         {
           user_id: user.id,
-          name: plantName,
-          recipe_data: currentRecipeData,
+          name: `Planta: ${plantName}`,
+          description: `Receita aplicada à planta: ${plantName}`,
+          substances: currentRecipeData.substances,
+          elements: currentRecipeData.elements,
+          solution_volume: currentRecipeData.solutionVolume,
+          volume_unit: currentRecipeData.volumeUnit,
+          ec_value: parseFloat(currentRecipeData.ecValue || "0"),
         },
       ]);
 
