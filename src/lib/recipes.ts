@@ -1,100 +1,193 @@
 
 import { createClient } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 export interface NutrientRecipe {
   id?: string;
   name: string;
   description?: string;
-  substances: Array<{
-    name: string;
-    weight: number;
-    volumePerLiter: number;
-  }>;
-  elements: Array<{
-    element: string;
-    target: number;
-    actual: number;
-    difference: number;
-  }>;
+  substances: any[];
+  elements: any[];
   solution_volume: number;
   volume_unit: string;
   ec_value?: number;
-  created_at?: string;
   user_id?: string;
+  created_at?: string;
 }
 
-export const saveNutrientRecipe = async (recipeData: NutrientRecipe): Promise<NutrientRecipe> => {
-  const supabase = createClient();
-  
-  // Check if user is authenticated
+// Get Supabase client
+const supabase = createClient();
+
+/**
+ * Save a nutrient recipe to the database
+ */
+export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<NutrientRecipe> => {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    throw new Error("You must be logged in to save recipes");
+    throw new Error("User not authenticated");
   }
-  
-  // Add user_id to the recipe data
-  const recipeWithUser = {
-    ...recipeData,
-    user_id: user.id
+
+  const recipeData = {
+    ...recipe,
+    user_id: user.id,
   };
-  
-  // Save to Supabase
+
   const { data, error } = await supabase
-    .from('nutrient_recipes')
-    .insert(recipeWithUser)
+    .from("nutrient_recipes")
+    .insert(recipeData)
     .select()
     .single();
-    
+
   if (error) {
-    throw new Error(`Failed to save recipe: ${error.message}`);
+    console.error("Error saving recipe:", error);
+    throw error;
   }
-  
+
   return data;
 };
 
+/**
+ * Get all recipes for the current user
+ */
 export const getUserRecipes = async (): Promise<NutrientRecipe[]> => {
-  const supabase = createClient();
-  
-  // Check if user is authenticated
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    return [];
+    throw new Error("User not authenticated");
   }
-  
-  // Fetch recipes for the current user
+
   const { data, error } = await supabase
-    .from('nutrient_recipes')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
-    
+    .from("nutrient_recipes")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
   if (error) {
-    throw new Error(`Failed to fetch recipes: ${error.message}`);
+    console.error("Error fetching recipes:", error);
+    throw error;
   }
-  
+
   return data || [];
 };
 
+/**
+ * Delete a recipe by ID
+ */
 export const deleteNutrientRecipe = async (recipeId: string): Promise<void> => {
-  const supabase = createClient();
-  
-  // Check if user is authenticated
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    throw new Error("You must be logged in to delete recipes");
+    throw new Error("User not authenticated");
   }
-  
-  // Delete the recipe
+
   const { error } = await supabase
-    .from('nutrient_recipes')
+    .from("nutrient_recipes")
     .delete()
-    .eq('id', recipeId)
-    .eq('user_id', user.id); // Ensure the user can only delete their own recipes
-    
+    .eq("id", recipeId)
+    .eq("user_id", user.id);
+
   if (error) {
-    throw new Error(`Failed to delete recipe: ${error.message}`);
+    console.error("Error deleting recipe:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get a specific recipe by ID
+ */
+export const getRecipeById = async (recipeId: string): Promise<NutrientRecipe> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("nutrient_recipes")
+    .select("*")
+    .eq("id", recipeId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching recipe:", error);
+    throw error;
+  }
+
+  return data;
+};
+
+/**
+ * Save a custom substance to the database
+ */
+export const saveCustomSubstance = async (substance: any): Promise<any> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const substanceData = {
+    ...substance,
+    user_id: user.id,
+  };
+
+  const { data, error } = await supabase
+    .from("custom_substances")
+    .upsert(substanceData)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error saving custom substance:", error);
+    throw error;
+  }
+
+  return data;
+};
+
+/**
+ * Get all custom substances for the current user
+ */
+export const getUserCustomSubstances = async (): Promise<any[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("custom_substances")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("Error fetching custom substances:", error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+/**
+ * Delete a custom substance by ID
+ */
+export const deleteCustomSubstance = async (substanceId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const { error } = await supabase
+    .from("custom_substances")
+    .delete()
+    .eq("id", substanceId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("Error deleting custom substance:", error);
+    throw error;
   }
 };

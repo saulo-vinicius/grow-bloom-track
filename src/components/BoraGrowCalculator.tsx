@@ -36,7 +36,15 @@ import {
 } from "@/lib/premium-substances";
 import { Textarea } from "@/components/ui/textarea";
 import { useCalculator } from "@/contexts/CalculatorContext";
-import { saveNutrientRecipe, getUserRecipes, deleteNutrientRecipe, NutrientRecipe } from "@/lib/recipes";
+import { 
+  saveNutrientRecipe, 
+  getUserRecipes, 
+  deleteNutrientRecipe, 
+  NutrientRecipe,
+  saveCustomSubstance,
+  getUserCustomSubstances,
+  deleteCustomSubstance
+} from "@/lib/recipes";
 
 interface Substance {
   id: string;
@@ -202,18 +210,25 @@ const BoraGrowCalculator = () => {
     }
   }, [calculationType]);
 
-  // Load saved recipes on component mount
+  // Load saved recipes and custom substances on component mount
   React.useEffect(() => {
-    const loadSavedRecipes = async () => {
+    const loadUserData = async () => {
+      if (!user) return;
+      
       try {
+        // Load saved recipes
         setLoadingRecipes(true);
         const recipes = await getUserRecipes();
         setSavedRecipes(recipes);
+        
+        // Load custom substances
+        const substances = await getUserCustomSubstances();
+        setUserCustomSubstances(substances);
       } catch (error) {
-        console.error("Error loading saved recipes:", error);
+        console.error("Error loading user data:", error);
         toast({
           title: "Error",
-          description: "Failed to load saved recipes",
+          description: "Failed to load saved data",
           variant: "destructive",
         });
       } finally {
@@ -221,10 +236,10 @@ const BoraGrowCalculator = () => {
       }
     };
 
-    loadSavedRecipes();
-  }, []);
+    loadUserData();
+  }, [user]);
 
-  // Set default active tab to targets
+  // Set default active tab to targets and load premium substances
   React.useEffect(() => {
     setActiveTab("targets");
     
@@ -319,26 +334,18 @@ const BoraGrowCalculator = () => {
         elements: customSubstanceElements,
       };
 
-      // Save to Supabase
-      const { error } = await supabase.from('custom_substances').upsert({
-        id: newSubstance.id,
-        name: newSubstance.name,
-        formula: newSubstance.formula,
-        elements: newSubstance.elements,
-        user_id: user.id,
-      });
-
-      if (error) throw error;
+      // Save to Supabase using the new function
+      const savedSubstance = await saveCustomSubstance(newSubstance);
 
       // Update local state
       if (editingSubstance) {
         setUserCustomSubstances(
           userCustomSubstances.map((s) =>
-            s.id === editingSubstance.id ? newSubstance : s
+            s.id === editingSubstance.id ? savedSubstance : s
           )
         );
       } else {
-        setUserCustomSubstances([...userCustomSubstances, newSubstance]);
+        setUserCustomSubstances([...userCustomSubstances, savedSubstance]);
       }
 
       toast({

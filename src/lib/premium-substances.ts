@@ -1,104 +1,80 @@
 
+import { createClient } from "@/integrations/supabase/client";
+
 export interface PremiumSubstance {
   id: string;
   name: string;
   formula?: string;
   elements: Record<string, number>;
-  premium: boolean;
-  brand: string;
+  premium?: boolean;
+  brand?: string;
 }
 
-// Mock premium substances for testing or when API is unavailable
+// Mock premium substances for testing
 export const mockPremiumSubstances: PremiumSubstance[] = [
   {
-    id: "advanced-micro",
-    name: "Advanced Nutrients Micro",
-    formula: "",
-    elements: {
-      "N (NO3-)": 5.0,
-      "N (NH4+)": 0.4,
-      Ca: 6.0,
-      Fe: 0.1,
-      Mn: 0.05,
-      B: 0.02,
-      Zn: 0.02,
-      Cu: 0.01,
-      Mo: 0.002
-    },
+    id: "calcium-nitrate-premium",
+    name: "Calcium Nitrate",
+    formula: "Ca(NO3)2",
+    elements: { "N (NO3-)": 15.5, Ca: 19.0 },
     premium: true,
-    brand: "Advanced Nutrients"
+    brand: "ProNutrients"
   },
   {
-    id: "advanced-grow",
-    name: "Advanced Nutrients Grow",
-    formula: "",
-    elements: {
-      "N (NO3-)": 3.0,
-      "N (NH4+)": 1.0,
-      P: 1.0,
-      K: 3.0,
-      Mg: 0.5,
-      S: 0.5
-    },
+    id: "potassium-nitrate-premium",
+    name: "Potassium Nitrate",
+    formula: "KNO3",
+    elements: { "N (NO3-)": 13.0, K: 38.0 },
     premium: true,
-    brand: "Advanced Nutrients"
+    brand: "ProNutrients"
   },
   {
-    id: "advanced-bloom",
-    name: "Advanced Nutrients Bloom",
-    formula: "",
-    elements: {
-      "N (NO3-)": 1.0,
-      "N (NH4+)": 0.5,
-      P: 4.0,
-      K: 8.0,
-      Mg: 0.5,
-      S: 1.0
-    },
+    id: "magnesium-sulfate-premium",
+    name: "Magnesium Sulfate",
+    formula: "MgSO4·7H2O",
+    elements: { Mg: 9.8, S: 13.0 },
     premium: true,
-    brand: "Advanced Nutrients"
+    brand: "HydroNutri"
   },
   {
-    id: "plant-prod-mj-boost",
-    name: "Plant-Prod MJ Boost",
-    formula: "",
-    elements: {
-      P: 10.0,
-      K: 30.0,
-      S: 9.0,
-      Mg: 3.0
-    },
+    id: "mono-potassium-phosphate-premium",
+    name: "Mono Potassium Phosphate",
+    formula: "KH2PO4",
+    elements: { P: 22.8, K: 28.7 },
     premium: true,
-    brand: "Plant-Prod MJ"
+    brand: "HydroNutri"
   },
   {
-    id: "plant-prod-mj-grow",
-    name: "Plant-Prod MJ Grow",
-    formula: "",
-    elements: {
-      "N (NO3-)": 12.0,
-      "N (NH4+)": 1.0,
-      P: 8.0,
-      K: 18.0,
-      Mg: 2.5,
-      S: 3.0,
-      Fe: 0.1,
-      Mn: 0.05,
-      B: 0.02,
-      Zn: 0.02,
-      Cu: 0.01,
-      Mo: 0.002
-    },
+    id: "iron-chelate-premium",
+    name: "Iron Chelate EDDHA",
+    formula: "Fe-EDDHA",
+    elements: { Fe: 6.0 },
     premium: true,
-    brand: "Plant-Prod MJ"
+    brand: "MicroMix"
+  },
+  {
+    id: "manganese-sulfate-premium",
+    name: "Manganese Sulfate",
+    formula: "MnSO4·H2O",
+    elements: { Mn: 31.8, S: 18.5 },
+    premium: true,
+    brand: "MicroMix"
   }
 ];
 
-// Function to fetch premium substances from Supabase storage
+/**
+ * Fetch premium substances from database or API
+ * In a real application, this would connect to a premium subscription service
+ */
 export const fetchPremiumSubstances = async (): Promise<PremiumSubstance[]> => {
   try {
-    // In the future, this can be replaced with a real Supabase call
-    // For now, just return the mock data
+    // In a real application, this would fetch from an API or database
+    // For demo purposes, we're returning mock data
+    
+    // Simulated API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return mock data
     return mockPremiumSubstances;
   } catch (error) {
     console.error("Error fetching premium substances:", error);
