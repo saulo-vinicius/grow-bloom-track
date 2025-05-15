@@ -1,17 +1,28 @@
+
 // This file re-exports the toast functionality from the shadcn/ui library
-import { Toast, ToastActionElement, ToastProps } from "@/components/ui/toast";
+import { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 import * as React from "react";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToasterToast = Toast & {
-  id: string;
+// Avoid circular reference by creating a base interface
+interface BaseToast {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+}
+
+// Use the base interface for ToasterToast
+type ToasterToast = BaseToast & {
+  id: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
+
+// Use the base interface for Toast
+type Toast = BaseToast & Partial<ToastProps>;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -135,9 +146,27 @@ function dispatch(action: Action) {
   });
 }
 
-type Toast = Omit<ToasterToast, "id">;
+// Extend the toast function to include variant methods
+interface ToastFunction {
+  (props: Toast): {
+    id: string;
+    dismiss: () => void;
+    update: (props: ToasterToast) => void;
+  };
+  success: (props: Toast) => {
+    id: string;
+    dismiss: () => void;
+    update: (props: ToasterToast) => void;
+  };
+  error: (props: Toast) => {
+    id: string;
+    dismiss: () => void;
+    update: (props: ToasterToast) => void;
+  };
+}
 
-function toast({ ...props }: Toast) {
+// Create the basic toast function
+const toast = ((props: Toast) => {
   const id = genId();
 
   const update = (props: ToasterToast) =>
@@ -145,6 +174,7 @@ function toast({ ...props }: Toast) {
       type: actionTypes.UPDATE_TOAST,
       toast: { ...props, id },
     });
+    
   const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
 
   dispatch({
@@ -164,7 +194,22 @@ function toast({ ...props }: Toast) {
     dismiss,
     update,
   };
-}
+}) as ToastFunction;
+
+// Add variant methods to the toast function
+toast.success = (props: Toast) => {
+  return toast({
+    ...props,
+    variant: "default",
+  });
+};
+
+toast.error = (props: Toast) => {
+  return toast({
+    ...props,
+    variant: "destructive",
+  });
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from "@/hooks/use-toast";
@@ -141,11 +142,19 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
       
       setPlants(prevPlants => [...prevPlants, newPlant]);
-      toast.success('Plant added successfully!');
+      toast({
+        title: "Sucesso!",
+        description: "Planta adicionada com sucesso!",
+        variant: "default"
+      });
     } catch (err) {
       console.error('Error adding plant:', err);
       setError('Failed to add plant');
-      toast.error('Failed to add plant');
+      toast({
+        title: "Erro",
+        description: "Falha ao adicionar planta",
+        variant: "destructive",
+      });
       throw err;
     }
   };
@@ -166,11 +175,19 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         )
       );
       
-      toast.success('Plant updated successfully!');
+      toast({
+        title: "Sucesso!",
+        description: "Planta atualizada com sucesso!",
+        variant: "default"
+      });
     } catch (err) {
       console.error('Error updating plant:', err);
       setError('Failed to update plant');
-      toast.error('Failed to update plant');
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar planta",
+        variant: "destructive",
+      });
       throw err;
     }
   };
@@ -180,11 +197,19 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (!user) throw new Error('User not authenticated');
       
       setPlants(prevPlants => prevPlants.filter(plant => plant.id !== id));
-      toast.success('Plant deleted successfully!');
+      toast({
+        title: "Sucesso!",
+        description: "Planta excluída com sucesso!",
+        variant: "default"
+      });
     } catch (err) {
       console.error('Error deleting plant:', err);
       setError('Failed to delete plant');
-      toast.error('Failed to delete plant');
+      toast({
+        title: "Erro",
+        description: "Falha ao excluir planta",
+        variant: "destructive",
+      });
       throw err;
     }
   };
@@ -212,7 +237,8 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       toast({
         title: "Sucesso!",
-        description: "Estatísticas da planta atualizadas!"
+        description: "Estatísticas da planta atualizadas!",
+        variant: "default"
       });
     } catch (err) {
       console.error('Error adding plant stat:', err);

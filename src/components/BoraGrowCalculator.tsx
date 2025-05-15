@@ -37,6 +37,13 @@ import SavedRecipesDialog from "./calculator/SavedRecipesDialog";
 import SelectPlantDialog from "./calculator/SelectPlantDialog";
 import { Substance, SelectedSubstance, CalculationResult } from "@/types/calculator";
 
+// Define a simplified User type that matches what our AuthContext provides
+type SimpleUser = {
+  id: string;
+  email: string;
+  isPremium: boolean;
+};
+
 const BoraGrowCalculator = () => {
   const { user } = useAuth();
   const [calculationType, setCalculationType] = useState<string>("desired");
