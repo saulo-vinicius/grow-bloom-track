@@ -1,4 +1,3 @@
-
 export interface Substance {
   id: string;
   name: string;
@@ -27,4 +26,11 @@ export interface CalculationResult {
   description?: string;
   solutionVolume?: number;
   volumeUnit?: string;
+}
+
+// Add a simple user type for the calculator component
+export interface SimpleUser {
+  id: string;
+  email: string;
+  isPremium: boolean;
 }

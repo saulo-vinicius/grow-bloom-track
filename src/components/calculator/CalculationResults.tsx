@@ -1,20 +1,19 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Save, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { User } from "@supabase/supabase-js";
+import { SimpleUser } from "@/types/calculator";
 
 interface CalculationResultsProps {
-  results: any;
+  results: CalculationResult;
   openSaveDialog: () => void;
   massUnit: string;
   volumeUnit: string;
   getElementColor: (element: string) => string;
   solutionVolume: number;
-  user: User | null;
+  user: SimpleUser | null;
   handleSelectPlantDialog: () => void;
 }
 

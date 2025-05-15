@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,15 +34,9 @@ import CustomSubstanceDialog from "./calculator/CustomSubstanceDialog";
 import SaveRecipeDialog from "./calculator/SaveRecipeDialog";
 import SavedRecipesDialog from "./calculator/SavedRecipesDialog";
 import SelectPlantDialog from "./calculator/SelectPlantDialog";
-import { Substance, SelectedSubstance, CalculationResult } from "@/types/calculator";
+import { Substance, SelectedSubstance, CalculationResult, SimpleUser } from "@/types/calculator";
 
 // Define a simplified User type that matches what our AuthContext provides
-type SimpleUser = {
-  id: string;
-  email: string;
-  isPremium: boolean;
-};
-
 const BoraGrowCalculator = () => {
   const { user } = useAuth();
   const [calculationType, setCalculationType] = useState<string>("desired");

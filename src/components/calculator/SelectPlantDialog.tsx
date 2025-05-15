@@ -1,23 +1,23 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { usePlants, Plant } from "@/contexts/PlantContext";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { SimpleUser } from "@/types/calculator";
 
 interface SelectPlantDialogProps {
   open: boolean;
   onClose: () => void;
-  currentRecipeData: any | null;
+  currentRecipeData: any; // Replace 'any' with a more specific type if possible
 }
 
 const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
@@ -25,116 +25,108 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
   onClose,
   currentRecipeData,
 }) => {
-  const { plants, loading, error, addPlantStat } = usePlants();
-  const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null);
-  
-  const handleApplyToPlant = async () => {
-    if (!selectedPlantId || !currentRecipeData) {
-      toast({
-        title: "Erro",
-        description: "Selecione uma planta primeiro",
-        variant: "destructive",
-      });
-      return;
-    }
+  const [plantName, setPlantName] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
+  const handleApplyRecipe = async () => {
     try {
-      const recipeDetails = {
-        type: "nutrient_recipe",
-        name: currentRecipeData.name || "Receita sem nome",
-        description: `EC: ${currentRecipeData.ecValue} mS/cm, Volume: ${currentRecipeData.solutionVolume} ${currentRecipeData.volumeUnit}`,
-        data: currentRecipeData
-      };
+      setLoading(true);
 
-      await addPlantStat(selectedPlantId, {
-        temperature: 0,  // Valores padrão
-        humidity: 0,
-        ppm: parseFloat(currentRecipeData.ecValue) * 700 || 0,  // Conversão aproximada de EC para PPM
-        notes: `Receita aplicada: ${recipeDetails.name}`,
-        recipeApplied: recipeDetails
-      });
+      // Check if plant name is empty
+      if (!plantName.trim()) {
+        toast({
+          title: "Erro",
+          description: "Por favor, insira o nome da planta.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if currentRecipeData is null
+      if (!currentRecipeData) {
+        toast({
+          title: "Erro",
+          description: "Não há receita para aplicar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get the user ID
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Usuário não autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Save the plant and recipe data to Supabase
+      const { error } = await supabase.from("plants").insert([
+        {
+          user_id: user.id,
+          name: plantName,
+          recipe_data: currentRecipeData,
+        },
+      ]);
+
+      if (error) {
+        console.error("Error saving plant data:", error);
+        toast({
+          title: "Erro",
+          description: "Falha ao salvar os dados da planta.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
-        title: "Sucesso!",
-        description: "Receita aplicada à planta com sucesso"
+        title: "Sucesso",
+        description: "Receita aplicada à planta com sucesso!",
       });
-
       onClose();
     } catch (error) {
-      console.error("Erro ao aplicar receita à planta:", error);
+      console.error("Error applying recipe to plant:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível aplicar a receita à planta",
-        variant: "destructive"
+        description: "Falha ao aplicar receita à planta.",
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Aplicar Receita a uma Planta</DialogTitle>
+          <DialogTitle>Aplicar Receita à Planta</DialogTitle>
           <DialogDescription>
-            Selecione a planta que receberá esta solução de nutrientes.
+            Insira o nome da planta para aplicar a receita atual.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="py-4">
-          {loading ? (
-            <div className="text-center py-8">Carregando plantas...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-destructive">Erro ao carregar plantas: {error}</div>
-          ) : plants.length > 0 ? (
-            <ScrollArea className="h-[350px]">
-              <div className="grid gap-3">
-                {plants.map((plant) => (
-                  <Card 
-                    key={plant.id} 
-                    className={`cursor-pointer transition-colors hover:bg-accent ${selectedPlantId === plant.id ? 'border-primary ring-2 ring-primary' : ''}`}
-                    onClick={() => setSelectedPlantId(plant.id)}
-                  >
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                          {plant.imageUrl ? (
-                            <img src={plant.imageUrl} alt={plant.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-xs">{plant.name.charAt(0)}</span>
-                          )}
-                        </div>
-                        {plant.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="text-sm text-muted-foreground">
-                        <p>Espécie: {plant.species}</p>
-                        <p>Fase: {plant.growthPhase}</p>
-                        <p>Localização: {plant.location === 'indoor' ? 'Ambiente Interno' : 'Ambiente Externo'}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
-          ) : (
-            <div className="text-center py-8">
-              <p>Você não tem plantas registradas.</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Adicione plantas primeiro na seção "Minhas Plantas".
-              </p>
-            </div>
-          )}
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Nome da Planta
+            </Label>
+            <Input
+              id="name"
+              value={plantName}
+              onChange={(e) => setPlantName(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
         </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button onClick={handleApplyToPlant} disabled={!selectedPlantId}>
-            Aplicar Receita
-          </Button>
-        </DialogFooter>
+        <Button onClick={handleApplyRecipe} disabled={loading}>
+          {loading ? "Aplicando..." : "Aplicar Receita"}
+        </Button>
       </DialogContent>
     </Dialog>
   );
