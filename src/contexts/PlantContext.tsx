@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from "@/hooks/use-toast";
@@ -67,50 +66,9 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (savedPlants) {
           setPlants(JSON.parse(savedPlants));
         } else {
-          // Sample plants for testing
-          const samplePlants: Plant[] = [
-            {
-              id: '1',
-              name: 'Monstera Deliciosa',
-              species: 'Monstera',
-              location: 'indoor',
-              imageUrl: '/placeholder.svg',
-              addedOn: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-              lastUpdated: new Date().toISOString(),
-              stats: [
-                {
-                  date: new Date().toISOString(),
-                  temperature: 24,
-                  humidity: 65,
-                  ppm: 800,
-                  notes: 'Looking healthy'
-                }
-              ],
-              growthPhase: 'Vegetative'
-            },
-            {
-              id: '2',
-              name: 'Basil',
-              species: 'Ocimum basilicum',
-              location: 'outdoor',
-              imageUrl: '/placeholder.svg',
-              addedOn: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-              lastUpdated: new Date().toISOString(),
-              stats: [
-                {
-                  date: new Date().toISOString(),
-                  temperature: 28,
-                  humidity: 55,
-                  ppm: 600,
-                  notes: 'Ready for harvest'
-                }
-              ],
-              growthPhase: 'Mature'
-            }
-          ];
-          
-          setPlants(samplePlants);
-          localStorage.setItem(`boragrow_plants_${user.id}`, JSON.stringify(samplePlants));
+          // Start with an empty array instead of sample plants
+          setPlants([]);
+          localStorage.setItem(`boragrow_plants_${user.id}`, JSON.stringify([]));
         }
       } catch (err) {
         console.error('Error loading plants:', err);
@@ -125,7 +83,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Save plants to localStorage when they change
   useEffect(() => {
-    if (user && plants.length > 0) {
+    if (user && plants) {
       localStorage.setItem(`boragrow_plants_${user.id}`, JSON.stringify(plants));
     }
   }, [plants, user]);

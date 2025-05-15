@@ -1,36 +1,51 @@
-export interface Substance {
-  id: string;
-  name: string;
-  formula?: string;
-  elements: Record<string, number>;
-}
 
-export interface SelectedSubstance extends Substance {
-  weight: number;
+import { Json } from "@/integrations/supabase/types";
+
+export interface SimpleUser {
+  id: string;
+  email?: string;
 }
 
 export interface CalculationResult {
-  substances: {
-    name: string;
-    weight: number;
-    volumePerLiter: number;
-  }[];
-  elements: {
-    element: string;
-    target: number;
-    actual: number;
-    difference: number;
-  }[];
-  ecValue: string;
-  name?: string;
-  description?: string;
+  nutrientA: number;
+  nutrientB: number;
+  nutrientC: number;
+  ph: number;
+  wateringFrequency: number;
+  lightHours: number;
+  expectedYield: string;
+  growthTime: string;
+  elements?: any[];
+  substances?: any[];
   solutionVolume?: number;
   volumeUnit?: string;
+  ecValue?: string;
+  name?: string;
+  description?: string;
 }
 
-// Add a simple user type for the calculator component
-export interface SimpleUser {
+export interface NutrientElement {
+  symbol: string;
+  name: string;
+  percentage: number;
+}
+
+export interface SubstanceElement {
+  symbol: string;
+  name: string;
+  percentage: number;
+}
+
+export interface Substance {
   id: string;
-  email: string;
-  isPremium: boolean;
+  name: string;
+  elements: SubstanceElement[];
+}
+
+export interface CustomSubstance {
+  id?: string;
+  name: string;
+  formula?: string;
+  elements: NutrientElement[];
+  user_id?: string;
 }
