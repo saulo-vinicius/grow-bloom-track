@@ -1,5 +1,5 @@
 
-import { createClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 export interface NutrientRecipe {
@@ -14,9 +14,6 @@ export interface NutrientRecipe {
   user_id?: string;
   created_at?: string;
 }
-
-// Get Supabase client
-const supabase = createClient();
 
 /**
  * Save a nutrient recipe to the database
