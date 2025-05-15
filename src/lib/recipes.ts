@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { Json } from "@/integrations/supabase/types";
 
 export interface NutrientRecipe {
   id?: string;
@@ -14,6 +15,23 @@ export interface NutrientRecipe {
   user_id?: string;
   created_at?: string;
 }
+
+// Type to handle Supabase data conversion
+type SupabaseNutrientRecipe = Omit<NutrientRecipe, 'substances' | 'elements'> & {
+  substances: Json;
+  elements: Json;
+};
+
+/**
+ * Convert Supabase data to our internal format
+ */
+const convertSupabaseToNutrientRecipe = (data: SupabaseNutrientRecipe): NutrientRecipe => {
+  return {
+    ...data,
+    substances: Array.isArray(data.substances) ? data.substances : [],
+    elements: Array.isArray(data.elements) ? data.elements : []
+  };
+};
 
 /**
  * Save a nutrient recipe to the database
@@ -41,7 +59,7 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
     throw error;
   }
 
-  return data;
+  return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
 };
 
 /**
@@ -65,7 +83,7 @@ export const getUserRecipes = async (): Promise<NutrientRecipe[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(item => convertSupabaseToNutrientRecipe(item as SupabaseNutrientRecipe));
 };
 
 /**
@@ -112,7 +130,7 @@ export const getRecipeById = async (recipeId: string): Promise<NutrientRecipe> =
     throw error;
   }
 
-  return data;
+  return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
 };
 
 /**

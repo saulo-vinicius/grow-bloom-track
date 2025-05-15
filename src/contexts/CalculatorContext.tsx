@@ -172,14 +172,18 @@ export const CalculatorProvider: React.FC<{ children: ReactNode }> = ({ children
       // Try to save to Supabase if user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Save to Supabase nutrient_recipes table - FIX: Add user_id field from current user
+        // Save to Supabase nutrient_recipes table
         await supabase.from('nutrient_recipes').insert({
           name,
           data: {
             ...inputs,
             ...results
           },
-          user_id: user.id // Add the user_id from the authenticated user
+          user_id: user.id,
+          substances: [], // Add empty arrays to match our schema
+          elements: [],
+          solution_volume: 1,
+          volume_unit: 'liters'
         });
       }
     } catch (error) {
