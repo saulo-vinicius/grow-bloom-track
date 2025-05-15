@@ -9,7 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      custom_substances: {
+        Row: {
+          elements: Json | null
+          formula: string | null
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          elements?: Json | null
+          formula?: string | null
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          elements?: Json | null
+          formula?: string | null
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      nutrient_recipes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          ec_value: number | null
+          elements: Json | null
+          id: string
+          name: string
+          solution_volume: number | null
+          substances: Json | null
+          user_id: string | null
+          volume_unit: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          ec_value?: number | null
+          elements?: Json | null
+          id?: string
+          name: string
+          solution_volume?: number | null
+          substances?: Json | null
+          user_id?: string | null
+          volume_unit?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          ec_value?: number | null
+          elements?: Json | null
+          id?: string
+          name?: string
+          solution_volume?: number | null
+          substances?: Json | null
+          user_id?: string | null
+          volume_unit?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
