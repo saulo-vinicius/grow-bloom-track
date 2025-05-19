@@ -80,18 +80,15 @@ const BoraGrowCalculator = () => {
   
   // Define nutrient color coding with new colors
   const nutrientColors: Record<string, string> = {
-    // Primary Macronutrients - now green
     "N (NO3-)": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
     "N (NH4+)": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
     P: "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
     "P₂O₅": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
     K: "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
     "K₂O": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
-    // Secondary Macronutrients - now blue
     Mg: "bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300",
     Ca: "bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300",
     S: "bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300",
-    // Micronutrients - all using gray tones
     Fe: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
     Mn: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
     Zn: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
@@ -106,7 +103,6 @@ const BoraGrowCalculator = () => {
 
   // Get color for element
   const getElementColor = (element: string): string => {
-    // Extract base element from compound notation (e.g., "N (NO3-)" -> "N")
     const baseElement = element.split(" ")[0];
     return (
       nutrientColors[element] ||
@@ -143,7 +139,7 @@ const BoraGrowCalculator = () => {
   const [isPremiumLoading, setIsPremiumLoading] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<(Substance | PremiumSubstance)[]>([]);
 
-  // Expanded database of substances from HydroBuddy (matching the repository reference)
+  // Expanded database of substances from HydroBuddy
   const defaultSubstanceDatabase: Substance[] = [
     {
       id: "ammonium-chloride",
@@ -293,22 +289,18 @@ const BoraGrowCalculator = () => {
 
   // Filter substances based on search term
   useEffect(() => {
-    // Create a stable reference to the database
     const currentDatabase = [
       ...userCustomSubstances.map(asSubstance),
       ...defaultSubstanceDatabase,
     ];
 
-    // Include premium substances in the results
     const searchDatabase = [...currentDatabase, ...premiumSubstances];
 
-    // If search term is empty, show all substances
     if (searchTerm.trim() === "") {
       setSearchResults(searchDatabase);
       return;
     }
 
-    // Filter by substance name
     const filtered = searchDatabase.filter((substance) =>
       substance.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
@@ -319,7 +311,6 @@ const BoraGrowCalculator = () => {
   // Auto-recalculate when inputs change
   useEffect(() => {
     if (selectedSubstances.length > 0) {
-      // Check if any substance has weight > 0 before calculating
       const hasSubstancesWithWeight = selectedSubstances.some(s => s.weight > 0);
       if (hasSubstancesWithWeight) {
         calculateNutrients();
@@ -342,7 +333,6 @@ const BoraGrowCalculator = () => {
       if (!user) return;
       
       try {
-        // Load saved recipes
         setLoadingRecipes(true);
         const recipes = await getUserRecipes().catch(error => {
           console.error("Error loading recipes:", error);
@@ -350,16 +340,14 @@ const BoraGrowCalculator = () => {
         });
         setSavedRecipes(recipes);
         
-        // Load custom substances
         const substances = await getUserCustomSubstances().catch(error => {
           console.error("Error loading custom substances:", error);
           return [];
         });
         
-        // Ensure all custom substances have valid ids and can be used as Substance type
         const validSubstances = substances.map(substance => ({
           ...substance,
-          id: substance.id || uuidv4() // Ensure every substance has an id
+          id: substance.id || uuidv4()
         }));
         
         setUserCustomSubstances(validSubstances);
@@ -382,7 +370,6 @@ const BoraGrowCalculator = () => {
   useEffect(() => {
     setActiveTab("targets");
     
-    // Load premium substances
     const loadPremiumSubstances = async () => {
       try {
         setIsPremiumLoading(true);
@@ -400,7 +387,6 @@ const BoraGrowCalculator = () => {
   }, []);
 
   const handleAddSubstance = (substance: Substance): void => {
-    // Check if substance already exists
     if (selectedSubstances.some((s) => s.id === substance.id)) {
       return;
     }
@@ -431,13 +417,11 @@ const BoraGrowCalculator = () => {
 
   const openCustomSubstanceDialog = (substance?: Substance): void => {
     if (substance) {
-      // Editing existing substance
       setEditingSubstance(substance);
       setCustomSubstanceName(substance.name);
       setCustomSubstanceFormula(substance.formula || "");
       setCustomSubstanceElements(substance.elements);
     } else {
-      // Creating new substance
       setEditingSubstance(null);
       setCustomSubstanceName("");
       setCustomSubstanceFormula("");
@@ -466,7 +450,6 @@ const BoraGrowCalculator = () => {
         return;
       }
 
-      // Ensure at least one element is defined
       if (Object.keys(customSubstanceElements).length === 0) {
         toast({
           title: "Erro",
@@ -476,7 +459,6 @@ const BoraGrowCalculator = () => {
         return;
       }
 
-      // Use UUID instead of timestamp-based id
       const newSubstance: CustomSubstance = {
         id: editingSubstance?.id || uuidv4(),
         name: customSubstanceName,
@@ -485,10 +467,8 @@ const BoraGrowCalculator = () => {
         user_id: user.id
       };
 
-      // Save to Supabase using the function
       const savedSubstance = await saveCustomSubstance(newSubstance);
 
-      // Update local state
       if (editingSubstance) {
         setUserCustomSubstances(
           userCustomSubstances.map((s) =>
@@ -518,20 +498,20 @@ const BoraGrowCalculator = () => {
   const setVegetativeValues = () => {
     setActivePhase("vegetative");
     setElements({
-      "N (NO3-)": 210,
+      "N (NO3-)": 199,
       "N (NH4+)": 0,
-      P: 31,
-      K: 235,
-      Mg: 48,
-      Ca: 200,
-      S: 64,
-      Fe: 2.8,
-      Mn: 0.5,
-      Zn: 0.05,
-      B: 0.5,
-      Cu: 0.02,
+      P: 62,
+      K: 207,
+      Mg: 60,
+      Ca: 242,
+      S: 132,
+      Fe: 0,
+      Mn: 0,
+      Zn: 0,
+      B: 0,
+      Cu: 0,
       Si: 0.0,
-      Mo: 0.05,
+      Mo: 0,
       Na: 0,
       Cl: 0,
     });
@@ -544,20 +524,20 @@ const BoraGrowCalculator = () => {
   const setBloomValues = () => {
     setActivePhase("bloom");
     setElements({
-      "N (NO3-)": 150,
+      "N (NO3-)": 149,
       "N (NH4+)": 0,
-      P: 50,
-      K: 300,
-      Mg: 50,
-      Ca: 170,
-      S: 60,
-      Fe: 2.5,
-      Mn: 0.5,
-      Zn: 0.05,
-      B: 0.5,
-      Cu: 0.02,
+      P: 68,
+      K: 331,
+      Mg: 93,
+      Ca: 204,
+      S: 224,
+      Fe: 0,
+      Mn: 0,
+      Zn: 0,
+      B: 0,
+      Cu: 0,
       Si: 0.0,
-      Mo: 0.05,
+      Mo: 0,
       Na: 0,
       Cl: 0,
     });
@@ -595,33 +575,106 @@ const BoraGrowCalculator = () => {
     });
   };
 
-  // Define ion conductivity constants for EC calculation
-  // Values are equivalent conductivity (mS/cm per mmol/L)
   const ionConductivity: Record<string, number> = {
-    // Cations
-    "NH4+": 0.0733,
-    "K+": 0.0735,
-    "Ca2+": 0.119,
-    "Mg2+": 0.106,
-    "Fe2+": 0.108,
-    "Mn2+": 0.107,
-    "Zn2+": 0.105,
-    "Cu2+": 0.107,
-    // Anions
-    "NO3-": 0.0714,
-    "H2PO4-": 0.036,
-    "HPO42-": 0.079,
-    "SO42-": 0.160,
-    "Cl-": 0.0760,
-    "BO3-": 0.032,
-    "MoO4-": 0.081
+    "NH4+": 73.4,
+    "K+": 73.5,
+    "Ca2+": 59.47,
+    "Mg2+": 53.05,
+    "Fe2+": 53.5,
+    "Mn2+": 53.5,
+    "Zn2+": 52.8,
+    "Cu2+": 53.6,
+    "Na+": 50.08,
+    "H+": 349.8,
+    "NO3-": 71.4,
+    "H2PO4-": 33.0,
+    "HPO42-": 57.0,
+    "SO42-": 80.0,
+    "Cl-": 76.31,
+    "HCO3-": 44.5,
+    "BO3-": 32.0,
+    "MoO42-": 74.5,
+    "OH-": 197.6,
   };
 
-  // Element to ion mapping for conductivity calculation
+  const substanceIonMap: Record<string, { ion: string, ratio: number, molarMass: number }[]> = {
+    "Ammonium Chloride": [
+      { ion: "NH4+", ratio: 1, molarMass: 18.04 },
+      { ion: "Cl-", ratio: 1, molarMass: 35.45 }
+    ],
+    "Ammonium Dibasic Phosphate": [
+      { ion: "NH4+", ratio: 2, molarMass: 18.04 },
+      { ion: "HPO42-", ratio: 1, molarMass: 96.0 }
+    ],
+    "Ammonium Monobasic Phosphate": [
+      { ion: "NH4+", ratio: 1, molarMass: 18.04 },
+      { ion: "H2PO4-", ratio: 1, molarMass: 97.0 }
+    ],
+    "Ammonium Sulfate": [
+      { ion: "NH4+", ratio: 2, molarMass: 18.04 },
+      { ion: "SO42-", ratio: 1, molarMass: 96.06 }
+    ],
+    "Boric Acid": [
+      { ion: "H+", ratio: 1, molarMass: 1.01 },
+      { ion: "BO3-", ratio: 1, molarMass: 58.8 }
+    ],
+    "Calcium Carbonate": [
+      { ion: "Ca2+", ratio: 1, molarMass: 40.08 },
+      { ion: "HCO3-", ratio: 1, molarMass: 61.0 }
+    ],
+    "Calcium Monobasic Phosphate": [
+      { ion: "Ca2+", ratio: 1, molarMass: 40.08 },
+      { ion: "H2PO4-", ratio: 2, molarMass: 97.0 }
+    ],
+    "Calcium Nitrate (ag grade)": [
+      { ion: "Ca2+", ratio: 1, molarMass: 40.08 },
+      { ion: "NO3-", ratio: 2, molarMass: 62.0 }
+    ],
+    "Calcium Sulfate (Dihydrate)": [
+      { ion: "Ca2+", ratio: 1, molarMass: 40.08 },
+      { ion: "SO42-", ratio: 1, molarMass: 96.06 }
+    ],
+    "Copper Sulfate (pentahydrate)": [
+      { ion: "Cu2+", ratio: 1, molarMass: 63.55 },
+      { ion: "SO42-", ratio: 1, molarMass: 96.06 }
+    ],
+    "Iron II Sulfate (Heptahydrate)": [
+      { ion: "Fe2+", ratio: 1, molarMass: 55.85 },
+      { ion: "SO42-", ratio: 1, molarMass: 96.06 }
+    ],
+    "Magnesium Sulfate (Heptahydrate)": [
+      { ion: "Mg2+", ratio: 1, molarMass: 24.31 },
+      { ion: "SO42-", ratio: 1, molarMass: 96.06 }
+    ],
+    "Potassium Chloride": [
+      { ion: "K+", ratio: 1, molarMass: 39.1 },
+      { ion: "Cl-", ratio: 1, molarMass: 35.45 }
+    ],
+    "Potassium Dibasic Phosphate": [
+      { ion: "K+", ratio: 2, molarMass: 39.1 },
+      { ion: "HPO42-", ratio: 1, molarMass: 96.0 }
+    ],
+    "Copper EDTA": [
+      { ion: "Cu2+", ratio: 0.8, molarMass: 63.55 }
+    ],
+    "Iron DTPA": [
+      { ion: "Fe2+", ratio: 0.8, molarMass: 55.85 }
+    ],
+    "Iron EDDHA": [
+      { ion: "Fe2+", ratio: 0.8, molarMass: 55.85 }
+    ],
+    "Iron EDTA": [
+      { ion: "Fe2+", ratio: 0.8, molarMass: 55.85 }
+    ],
+    "Mn EDTA": [
+      { ion: "Mn2+", ratio: 0.8, molarMass: 54.94 }
+    ]
+  };
+
   const elementToIons: Record<string, { ion: string, factor: number }[]> = {
     "N (NO3-)": [{ ion: "NO3-", factor: 1 }],
     "N (NH4+)": [{ ion: "NH4+", factor: 1 }],
-    "P": [{ ion: "H2PO4-", factor: 0.5 }, { ion: "HPO42-", factor: 0.5 }], // Simplified approximation
+    "P": [{ ion: "H2PO4-", factor: 0.5 }, { ion: "HPO42-", factor: 0.5 }],
     "K": [{ ion: "K+", factor: 1 }],
     "Ca": [{ ion: "Ca2+", factor: 1 }],
     "Mg": [{ ion: "Mg2+", factor: 1 }],
@@ -635,22 +688,62 @@ const BoraGrowCalculator = () => {
     "Cl": [{ ion: "Cl-", factor: 1 }]
   };
 
-  // Element atomic/molecular weights for conversion from ppm to mmol/L
   const elementWeights: Record<string, number> = {
-    "N (NO3-)": 14.01, // Nitrogen atomic weight
-    "N (NH4+)": 14.01, // Nitrogen atomic weight
-    "P": 30.97, // Phosphorus atomic weight
-    "K": 39.10, // Potassium atomic weight
-    "Ca": 40.08, // Calcium atomic weight
-    "Mg": 24.31, // Magnesium atomic weight
-    "S": 32.07, // Sulfur atomic weight
-    "Fe": 55.85, // Iron atomic weight
-    "Mn": 54.94, // Manganese atomic weight
-    "Zn": 65.38, // Zinc atomic weight
-    "B": 10.81, // Boron atomic weight
-    "Cu": 63.55, // Copper atomic weight
-    "Mo": 95.95, // Molybdenum atomic weight
-    "Cl": 35.45  // Chlorine atomic weight
+    "N (NO3-)": 14.01,
+    "N (NH4+)": 14.01,
+    "P": 30.97,
+    "K": 39.10,
+    "Ca": 40.08,
+    "Mg": 24.31,
+    "S": 32.07,
+    "Fe": 55.85,
+    "Mn": 54.94,
+    "Zn": 65.38,
+    "B": 10.81,
+    "Cu": 63.55,
+    "Mo": 95.95,
+    "Cl": 35.45
+  };
+
+  const calculateAccurateEC = (selectedSubstances: SelectedSubstance[], solutionVolume: number) => {
+    const ionConcentrations: Record<string, number> = {};
+    
+    for (const substance of selectedSubstances) {
+      if (!substance.weight || substance.weight <= 0) continue;
+      
+      const ionMapping = substanceIonMap[substance.name];
+      
+      if (ionMapping) {
+        for (const { ion, ratio, molarMass } of ionMapping) {
+          const mmolPerL = (substance.weight / molarMass * ratio) / solutionVolume;
+          ionConcentrations[ion] = (ionConcentrations[ion] || 0) + mmolPerL;
+        }
+      } else {
+        for (const [element, percentage] of Object.entries(substance.elements)) {
+          if (!elementToIons[element] || !elementWeights[element]) continue;
+          
+          const mmolPerL = (substance.weight * (percentage as number) / 100) / elementWeights[element] / solutionVolume;
+          
+          elementToIons[element].forEach(({ ion, factor }) => {
+            ionConcentrations[ion] = (ionConcentrations[ion] || 0) + mmolPerL * factor;
+          });
+        }
+      }
+    }
+    
+    let totalEC = 0;
+    
+    for (const [ion, mmolPerL] of Object.entries(ionConcentrations)) {
+      if (ionConductivity[ion]) {
+        const contribution = ionConductivity[ion] * mmolPerL / 1000;
+        totalEC += contribution;
+      }
+    }
+    
+    const dilutionFactor = 0.95;
+    totalEC = totalEC * dilutionFactor;
+    
+    return totalEC.toFixed(3);
   };
 
   const calculateNutrients = (): void => {
@@ -663,33 +756,23 @@ const BoraGrowCalculator = () => {
       return;
     }
 
-    // Real calculation based on selected substances and target elements
-    // Calculate contribution of each substance to the elements
     const totalElements: Record<string, number> = {};
     const contributionBySubstance: Record<string, Record<string, number>> = {};
     
-    // Initialize totalElements with zeros for all target elements
     Object.keys(elements).forEach(element => {
       totalElements[element] = 0;
     });
     
-    // Calculate the contribution of each substance to each element
     selectedSubstances.forEach(substance => {
       contributionBySubstance[substance.id] = {};
       
-      // Skip if weight is zero
       if (substance.weight <= 0) return;
       
-      // For each element in the substance
       Object.entries(substance.elements).forEach(([element, percentage]) => {
-        // Calculate contribution in mg (ppm)
-        // Formula: weight (g) * percentage (%) / solution volume (L) * 10 = ppm
         const contribution = (substance.weight * (percentage as number) / 100) / solutionVolume * 1000;
         
-        // Store contribution for this substance and element
         contributionBySubstance[substance.id][element] = contribution;
         
-        // Add to total for this element
         if (totalElements[element] !== undefined) {
           totalElements[element] += contribution;
         } else {
@@ -698,7 +781,6 @@ const BoraGrowCalculator = () => {
       });
     });
     
-    // Compare actual values with target values and calculate differences
     const elementResults = Object.entries(elements).map(([element, target]) => {
       const actual = totalElements[element] || 0;
       return {
@@ -709,7 +791,6 @@ const BoraGrowCalculator = () => {
       };
     });
     
-    // Calculate volume per liter for each substance
     const substanceResults = selectedSubstances.map(substance => {
       const volumePerLiter = substance.weight / solutionVolume;
       return {
@@ -719,29 +800,7 @@ const BoraGrowCalculator = () => {
       };
     });
     
-    // Calculate EC value using ion conductivity method (more accurate)
-    let totalEC = 0;
-    
-    // For each element, calculate its contribution to EC
-    Object.entries(totalElements).forEach(([element, concentration]) => {
-      // Skip if element is not in our mapping
-      if (!elementToIons[element] || !elementWeights[element]) return;
-      
-      // Convert from ppm (mg/L) to mmol/L
-      const mmolPerL = concentration / elementWeights[element];
-      
-      // Apply ion conductivity
-      elementToIons[element].forEach(({ ion, factor }) => {
-        if (ionConductivity[ion]) {
-          // Multiply by factor to account for ion ratios
-          const ionContribution = mmolPerL * factor * ionConductivity[ion];
-          totalEC += ionContribution;
-        }
-      });
-    });
-    
-    // Format EC value to 2 decimal places
-    const ecValue = totalEC.toFixed(2);
+    const ecValue = calculateAccurateEC(selectedSubstances, solutionVolume);
     
     const calculationResults: CalculationResult = {
       substances: substanceResults,
@@ -749,7 +808,6 @@ const BoraGrowCalculator = () => {
       ecValue,
       solutionVolume,
       volumeUnit,
-      // Add these empty fields to match the CalculationResult interface
       nutrientA: undefined,
       nutrientB: undefined,
       nutrientC: undefined,
@@ -814,12 +872,10 @@ const BoraGrowCalculator = () => {
         }
       };
 
-      // Make sure we have a valid structure before saving
       const cleanedData = JSON.parse(JSON.stringify(recipeData));
       
       const savedRecipe = await saveNutrientRecipe(cleanedData);
       
-      // Update local state
       setSavedRecipes([savedRecipe, ...savedRecipes]);
       
       toast({
@@ -844,7 +900,6 @@ const BoraGrowCalculator = () => {
     try {
       await deleteNutrientRecipe(recipeId);
       
-      // Update local state
       setSavedRecipes(savedRecipes.filter(recipe => recipe.id !== recipeId));
       
       toast({
@@ -880,14 +935,11 @@ const BoraGrowCalculator = () => {
   };
 
   const handleLoadRecipe = (recipe: NutrientRecipe) => {
-    // Set solution volume and unit
     setSolutionVolume(recipe.solution_volume);
     setVolumeUnit(recipe.volume_unit);
     
-    // Load substances
     if (recipe.substances && Array.isArray(recipe.substances)) {
       const loadedSubstances = recipe.substances.map((substance: any) => {
-        // Find the substance in our databases
         const foundSubstance = [...defaultSubstanceDatabase, ...userCustomSubstances, ...premiumSubstances]
           .find(s => s.name === substance.name);
         
@@ -898,7 +950,6 @@ const BoraGrowCalculator = () => {
           };
         }
         
-        // If not found, create a placeholder
         return {
           id: `loaded-${Date.now()}-${substance.name}`,
           name: substance.name,
@@ -910,7 +961,6 @@ const BoraGrowCalculator = () => {
       setSelectedSubstances(loadedSubstances);
     }
     
-    // Load element targets
     if (recipe.elements && Array.isArray(recipe.elements)) {
       const newElements = { ...elements };
       
@@ -923,7 +973,6 @@ const BoraGrowCalculator = () => {
       setElements(newElements);
     }
     
-    // Set the results
     if (recipe.data) {
       setResults({
         ...recipe.data,
@@ -962,7 +1011,6 @@ const BoraGrowCalculator = () => {
     });
   };
 
-  // Create a ref for the results section
   const resultsRef = React.useRef<HTMLDivElement>(null);
   
   const handleSelectPlantDialog = () => {
@@ -987,13 +1035,10 @@ const BoraGrowCalculator = () => {
     setSelectPlantDialogOpen(true);
   };
 
-  // Add a function to handle deletion of custom substances
   const handleDeleteCustomSubstance = async (substanceId: string) => {
     try {
-      // Delete from Supabase
       await deleteCustomSubstance(substanceId);
       
-      // Update local state immediately
       setUserCustomSubstances(prevSubstances => 
         prevSubstances.filter(substance => substance.id !== substanceId)
       );
@@ -1075,7 +1120,6 @@ const BoraGrowCalculator = () => {
             </CardContent>
           </Card>
 
-          {/* Phase buttons with active state styling */}
           <div className="flex flex-wrap justify-between gap-2">
             <div className="flex flex-wrap gap-2">
               <Button 
@@ -1103,7 +1147,6 @@ const BoraGrowCalculator = () => {
 
             <TabsContent value="substances" className="mt-4">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Substance Database */}
                 <SubstancesPanel
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
@@ -1117,7 +1160,6 @@ const BoraGrowCalculator = () => {
                   onDeleteCustomSubstance={handleDeleteCustomSubstance}
                 />
                 
-                {/* Selected Substances */}
                 <SelectedSubstancesPanel
                   selectedSubstances={selectedSubstances}
                   handleUpdateWeight={handleUpdateWeight}
@@ -1173,7 +1215,6 @@ const BoraGrowCalculator = () => {
             </div>
           )}
 
-          {/* Dialogs */}
           <CustomSubstanceDialog
             open={customSubstanceDialogOpen}
             onClose={() => setCustomSubstanceDialogOpen(false)}

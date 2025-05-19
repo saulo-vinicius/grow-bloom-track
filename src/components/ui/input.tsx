@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -6,10 +5,13 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, onBlur, ...props }, ref) => {
     // Special handling for number and text inputs to allow commas
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Handle comma-to-dot conversion for both number and text inputs with inputMode="decimal"
+      // For text inputs with inputMode="decimal" or number inputs, handle comma-to-dot conversion
       if ((type === 'number' || props.inputMode === 'decimal') && e.target.value.includes(',')) {
-        // Replace commas with dots for decimal inputs
-        const value = e.target.value.replace(/,/g, '.');
+        // Replace commas with dots for decimal inputs, but keep the original display
+        const originalValue = e.target.value;
+        const value = originalValue.replace(/,/g, '.');
+        
+        // Create a new synthetic event with the modified value
         const newEvent = {
           ...e,
           target: {
@@ -26,7 +28,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 
     // Handle blur event for extra validation on decimals
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-      if (props.inputMode === 'decimal' && e.target.value) {
+      if ((type === 'number' || props.inputMode === 'decimal') && e.target.value) {
         // Ensure valid decimal format when leaving the field
         let value = e.target.value.replace(/,/g, '.');
         

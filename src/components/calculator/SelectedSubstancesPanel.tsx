@@ -23,6 +23,24 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
+  // Function to handle weight input changes with proper decimal handling
+  const handleWeightChange = (id: string, inputValue: string) => {
+    // First replace commas with dots for decimal values
+    const value = inputValue.replace(/,/g, '.');
+    
+    // Handle special cases
+    if (value === '' || value === '.') {
+      handleUpdateWeight(id, 0);
+      return;
+    }
+    
+    // Parse the numeric value
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      handleUpdateWeight(id, numValue);
+    }
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
@@ -52,17 +70,7 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
                         inputMode="decimal"
                         pattern="[0-9]*[.,]?[0-9]*"
                         value={substance.weight || ""}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/,/g, '.');
-                          if (value === '' || value === '.') {
-                            handleUpdateWeight(substance.id, 0);
-                          } else {
-                            const numValue = parseFloat(value);
-                            if (!isNaN(numValue)) {
-                              handleUpdateWeight(substance.id, numValue);
-                            }
-                          }
-                        }}
+                        onChange={(e) => handleWeightChange(substance.id, e.target.value)}
                         className="w-full"
                       />
                       <span className="ml-2 text-sm whitespace-nowrap">{massUnit}</span>
