@@ -96,6 +96,16 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
       }
 
       if (isNewPlant) {
+        // Check if a plant with the same name already exists
+        if (plants.some(p => p.name.toLowerCase() === plantName.trim().toLowerCase())) {
+          toast({
+            title: "Nome duplicado",
+            description: "Uma planta com este nome já existe. Por favor, use um nome diferente.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         // Create a new plant with initial empty stats array
         const newPlant = {
           name: plantName,
@@ -108,17 +118,17 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
           growthPhase: "Vegetativa",
         };
         
-        // Add the plant first
+        // Add the plant
         await addPlant(newPlant);
         
-        // Find the newly added plant by name after state update
-        // We need to fetch the latest plants from the context after the update
-        const currentPlants = usePlants().plants;
-        const newlyAddedPlant = currentPlants.find(p => p.name === plantName);
-        
-        if (newlyAddedPlant) {
+        // Find the newly added plant by name in the updated plants list
+        // Since addPlant has completed, plants state will be updated
+        // We need to find the plant by name
+        const newPlantId = plants.find(p => p.name === plantName)?.id;
+
+        if (newPlantId) {
           // Add the recipe as a stat to this plant
-          await addPlantStat(newlyAddedPlant.id, {
+          await addPlantStat(newPlantId, {
             temperature: 24,
             humidity: 65,
             ppm: 800,
@@ -136,7 +146,31 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
             description: "Receita aplicada à nova planta com sucesso!",
           });
         } else {
-          throw new Error("Falha ao encontrar a planta recém-criada");
+          // If we can't find the plant ID (which shouldn't happen normally)
+          // Create a new plant with the stat included
+          const completeNewPlant = {
+            ...newPlant,
+            stats: [{
+              date: new Date().toISOString(),
+              temperature: 24,
+              humidity: 65,
+              ppm: 800,
+              notes: `Receita aplicada: ${currentRecipeData.name || "Sem nome"}`,
+              recipeApplied: {
+                type: "nutrient",
+                name: currentRecipeData.name || "Receita sem nome",
+                description: currentRecipeData.description || "",
+                data: currentRecipeData
+              }
+            }]
+          };
+          
+          await addPlant(completeNewPlant);
+          
+          toast({
+            title: "Sucesso",
+            description: "Nova planta criada com a receita aplicada com sucesso!",
+          });
         }
       } else {
         // Add recipe to existing plant
