@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +21,7 @@ import {
   deleteCustomSubstance
 } from "@/lib/recipes";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { calculateNutrients } from "@/utils/calculatorUtils";
 
 // Import components
 import SubstancesPanel from "./calculator/SubstancesPanel";
@@ -311,7 +311,7 @@ const BoraGrowCalculator = () => {
   };
 
   const calculateNutrients = () => {
-    // This function now calls the utility function and is kept for existing references
+    // This function now directly uses the imported utility function instead of require
     if (selectedSubstances.length === 0) {
       toast({
         title: "Erro",
@@ -320,9 +320,6 @@ const BoraGrowCalculator = () => {
       });
       return;
     }
-
-    // Import the actual calculation from the utility file
-    const { calculateNutrients } = require("@/utils/calculatorUtils");
     
     const calculationResults = calculateNutrients(
       selectedSubstances,
