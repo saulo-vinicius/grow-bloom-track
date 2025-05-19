@@ -23,9 +23,9 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Enhanced function to handle weight input changes with proper decimal handling for both commas and dots
+  // Enhanced function to handle weight input changes with proper decimal handling
   const handleWeightChange = (id: string, inputValue: string) => {
-    // First replace commas with dots for decimal values
+    // Replace commas with dots for decimal values
     const value = inputValue.replace(/,/g, '.');
     
     // Handle special cases
@@ -46,6 +46,7 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Substâncias Selecionadas</CardTitle>
+          <div className="text-xs text-muted-foreground">Use . (ponto) para números decimais</div>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -69,9 +70,10 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
                         type="text"
                         inputMode="decimal"
                         pattern="[0-9]*[.,]?[0-9]*"
-                        value={substance.weight === 0 ? "" : substance.weight.toString().replace(".", ",")}
+                        value={substance.weight === 0 ? "" : substance.weight.toString()}
                         onChange={(e) => handleWeightChange(substance.id, e.target.value)}
                         className="w-full"
+                        placeholder="0.0"
                       />
                       <span className="ml-2 text-sm whitespace-nowrap">{massUnit}</span>
                     </div>
