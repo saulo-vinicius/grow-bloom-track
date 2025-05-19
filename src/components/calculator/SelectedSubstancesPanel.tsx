@@ -23,19 +23,18 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Enhanced function to handle weight input changes with proper decimal handling
+  // Improved function to handle weight input changes
   const handleWeightChange = (id: string, inputValue: string) => {
-    // Replace commas with dots for decimal values
-    const value = inputValue.replace(/,/g, '.');
-    
-    // Handle special cases
-    if (value === '' || value === '.') {
+    // Handle empty values
+    if (!inputValue || inputValue === '.') {
       handleUpdateWeight(id, 0);
       return;
     }
     
-    // Parse the numeric value
+    // Replace any commas with dots and parse the number
+    const value = inputValue.replace(/,/g, '.');
     const numValue = parseFloat(value);
+    
     if (!isNaN(numValue)) {
       handleUpdateWeight(id, numValue);
     }
@@ -69,7 +68,7 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
                       <Input
                         type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*[.,]?[0-9]*"
+                        pattern="[0-9]*[.]?[0-9]*"
                         value={substance.weight === 0 ? "" : substance.weight.toString()}
                         onChange={(e) => handleWeightChange(substance.id, e.target.value)}
                         className="w-full"

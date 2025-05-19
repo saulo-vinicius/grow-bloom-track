@@ -1,4 +1,3 @@
-
 // Constants used in the calculator
 
 // Define nutrient color coding
@@ -64,22 +63,22 @@ export const elementWeights: Record<string, number> = {
   "Cl": 35.45
 };
 
-// Updated ion conductivity values to match HydroBuddy
+// Updated ion conductivity values from HydroBuddy
 export const ionConductivity: Record<string, number> = {
   "NH4+": 73.5,
   "K+": 73.5,
-  "Ca2+": 59.5,
-  "Mg2+": 53.0,
-  "Fe2+": 54.0,
-  "Mn2+": 53.5,
-  "Zn2+": 52.8,
-  "Cu2+": 54.0,
+  "Ca2+": 119.0,
+  "Mg2+": 106.0,
+  "Fe2+": 108.0,
+  "Mn2+": 107.0,
+  "Zn2+": 105.6,
+  "Cu2+": 108.0,
   "Na+": 50.1,
   "H+": 349.8,
-  "NO3-": 71.4,
+  "NO3-": 71.5,
   "H2PO4-": 33.0,
   "HPO42-": 57.0,
-  "SO42-": 80.0,
+  "SO42-": 160.0,
   "Cl-": 76.3,
   "HCO3-": 44.5,
   "BO3-": 32.0,
@@ -87,7 +86,7 @@ export const ionConductivity: Record<string, number> = {
   "OH-": 198.0,
 };
 
-// Updated substance-to-ion mapping with more accurate ratios
+// Substance-to-ion mapping with accurate ratios
 export const substanceIonMap: Record<string, { ion: string, ratio: number, molarMass: number }[]> = {
   "Ammonium Chloride": [
     { ion: "NH4+", ratio: 1, molarMass: 18.04 },
