@@ -24,6 +24,7 @@ import {
   getUserCustomSubstances,
   deleteCustomSubstance
 } from "@/lib/recipes";
+import { v4 as uuidv4 } from 'uuid';
 
 // Import our refactored components
 import SubstancesPanel from "./calculator/SubstancesPanel";
@@ -34,7 +35,14 @@ import CustomSubstanceDialog from "./calculator/CustomSubstanceDialog";
 import SaveRecipeDialog from "./calculator/SaveRecipeDialog";
 import SavedRecipesDialog from "./calculator/SavedRecipesDialog";
 import SelectPlantDialog from "./calculator/SelectPlantDialog";
-import { Substance, SelectedSubstance, CalculationResult, SimpleUser } from "@/types/calculator";
+import { 
+  Substance, 
+  SelectedSubstance, 
+  CalculationResult, 
+  SimpleUser, 
+  CustomSubstance, 
+  asSubstance 
+} from "@/types/calculator";
 
 // Define a simplified User type that matches what our AuthContext provides
 const BoraGrowCalculator = () => {
@@ -260,7 +268,7 @@ const BoraGrowCalculator = () => {
   useEffect(() => {
     // Create a stable reference to the database
     const currentDatabase = [
-      ...userCustomSubstances,
+      ...userCustomSubstances.map(asSubstance),
       ...defaultSubstanceDatabase,
     ];
 
@@ -320,7 +328,14 @@ const BoraGrowCalculator = () => {
           console.error("Error loading custom substances:", error);
           return [];
         });
-        setUserCustomSubstances(substances);
+        
+        // Ensure all custom substances have valid ids and can be used as Substance type
+        const validSubstances = substances.map(substance => ({
+          ...substance,
+          id: substance.id || uuidv4() // Ensure every substance has an id
+        }));
+        
+        setUserCustomSubstances(validSubstances);
       } catch (error) {
         console.error("Error loading user data:", error);
         toast({
@@ -434,11 +449,13 @@ const BoraGrowCalculator = () => {
         return;
       }
 
-      const newSubstance: Substance = {
-        id: editingSubstance?.id || `custom-${Date.now()}`,
+      // Use UUID instead of timestamp-based id
+      const newSubstance: CustomSubstance = {
+        id: editingSubstance?.id || uuidv4(),
         name: customSubstanceName,
         formula: customSubstanceFormula,
         elements: customSubstanceElements,
+        user_id: user.id
       };
 
       // Save to Supabase using the function
@@ -461,11 +478,11 @@ const BoraGrowCalculator = () => {
       });
       
       setCustomSubstanceDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving custom substance:", error);
       toast({
         title: "Erro",
-        description: "Falha ao salvar substância",
+        description: "Falha ao salvar substância: " + (error.message || "Falha desconhecida"),
         variant: "destructive",
       });
     }
@@ -545,22 +562,6 @@ const BoraGrowCalculator = () => {
     toast({
       title: "Valores resetados",
       description: "Todos os valores foram zerados",
-    });
-  };
-
-  const openDocumentation = () => {
-    window.open('https://docs.boragrow.com/nutrient-calculator', '_blank');
-    toast({
-      title: "Abrindo documentação",
-      description: "Redirecionando para a documentação",
-    });
-  };
-
-  const contactSupport = () => {
-    window.open('mailto:support@boragrow.com?subject=Suporte%20BoraGrow', '_blank');
-    toast({
-      title: "Contato de suporte",
-      description: "Abrindo email para suporte",
     });
   };
 
@@ -947,14 +948,6 @@ const BoraGrowCalculator = () => {
               </Button>
               <Button onClick={setBloomValues} variant="outline" className="flex items-center gap-1">
                 Floração
-              </Button>
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={openDocumentation} variant="ghost" className="flex items-center gap-1">
-                Ver Documentação
-              </Button>
-              <Button onClick={contactSupport} variant="ghost" className="flex items-center gap-1">
-                Contato de Suporte
               </Button>
             </div>
           </div>

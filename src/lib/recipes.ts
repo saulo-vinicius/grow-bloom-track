@@ -4,6 +4,7 @@ import { User } from "@supabase/supabase-js";
 import { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { CustomSubstance } from "@/types/calculator";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface NutrientRecipe {
   id?: string;
@@ -67,6 +68,7 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
     // Ensure the recipe data is properly formatted for JSON serialization
     const recipeData = {
       ...recipe,
+      id: recipe.id || uuidv4(), // Ensure valid UUID
       user_id: user.id,
       substances: recipe.substances || [],
       elements: recipe.elements || [],
@@ -91,7 +93,7 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
 
     const { data, error } = await supabase
       .from("nutrient_recipes")
-      .insert(dbRecipe)
+      .upsert(dbRecipe)
       .select()
       .single();
 
@@ -192,12 +194,19 @@ export const saveCustomSubstance = async (substance: CustomSubstance): Promise<C
   try {
     const user = await getAuthenticatedUser();
 
+    // Ensure there's a valid id
+    if (!substance.id || substance.id.startsWith('custom-')) {
+      substance.id = uuidv4();
+    }
+
     // Ensure the substance data is properly formatted for JSON serialization
     const substanceData = {
       ...substance,
       user_id: user.id,
       elements: substance.elements as unknown as Json
     };
+
+    console.log("Saving substance with ID:", substanceData.id);
 
     const { data, error } = await supabase
       .from("custom_substances")

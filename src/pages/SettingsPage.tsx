@@ -11,12 +11,20 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Bell, Moon, HelpCircle, LogOut } from 'lucide-react';
+import { User, Bell, Moon, HelpCircle, LogOut, BookOpen, MessageCircle } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
+
+  const openDocumentation = () => {
+    window.open('https://docs.boragrow.com/nutrient-calculator', '_blank');
+  };
+
+  const contactSupport = () => {
+    window.open('mailto:support@boragrow.com?subject=Suporte%20BoraGrow', '_blank');
+  };
 
   return (
     <Layout>
@@ -167,7 +175,15 @@ const SettingsPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">
                     View our comprehensive guide to using the app
                   </p>
-                  <Button variant="outline" size="sm">View Documentation</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={openDocumentation}
+                    className="flex items-center gap-1"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Ver Documentação
+                  </Button>
                 </div>
                 
                 <div className="pt-4 border-t space-y-2">
@@ -175,7 +191,15 @@ const SettingsPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">
                     Having issues? Our support team is here to help
                   </p>
-                  <Button variant="outline" size="sm">Contact Support</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={contactSupport}
+                    className="flex items-center gap-1"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Contato de Suporte
+                  </Button>
                 </div>
                 
                 <div className="pt-4 border-t space-y-2">
