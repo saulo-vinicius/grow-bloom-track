@@ -3,15 +3,16 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SaveRecipeDialogProps {
   open: boolean;
@@ -32,43 +33,63 @@ const SaveRecipeDialog: React.FC<SaveRecipeDialogProps> = ({
   recipeDescription,
   setRecipeDescription,
 }) => {
+  const [isSaving, setIsSaving] = React.useState(false);
+  const isMobile = useIsMobile();
+  
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      await onSave();
+      onClose();
+    } catch (error) {
+      console.error("Error saving recipe:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className={isMobile ? "w-[95%] max-w-lg" : ""}>
         <DialogHeader>
-          <DialogTitle>Salvar Receita de Nutrientes</DialogTitle>
+          <DialogTitle>Salvar Receita</DialogTitle>
           <DialogDescription>
-            Salve sua receita atual de solução de nutrientes para uso futuro.
+            Salve sua receita para uso futuro.
           </DialogDescription>
         </DialogHeader>
-
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="recipe-name">Nome da Receita</Label>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="recipe-name" className="text-right">
+              Nome
+            </Label>
             <Input
               id="recipe-name"
               value={recipeName}
               onChange={(e) => setRecipeName(e.target.value)}
-              placeholder="ex. Tomate Fase Vegetativa"
+              className="col-span-3"
+              placeholder="Nome da receita"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="recipe-description">Descrição (opcional)</Label>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="recipe-description" className="text-right">
+              Descrição
+            </Label>
             <Textarea
               id="recipe-description"
               value={recipeDescription}
               onChange={(e) => setRecipeDescription(e.target.value)}
-              placeholder="Adicione notas sobre esta receita..."
-              rows={3}
+              className="col-span-3"
+              placeholder="Descrição opcional da receita"
             />
           </div>
         </div>
-
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={onSave}>Salvar Receita</Button>
+          <Button onClick={handleSave} disabled={!recipeName || isSaving}>
+            {isSaving ? "Salvando..." : "Salvar Receita"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

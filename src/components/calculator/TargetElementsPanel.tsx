@@ -50,86 +50,6 @@ const TargetElementsPanel: React.FC<TargetElementsPanelProps> = ({
             Limpar Valores
           </Button>
         </div>
-        <div className="flex gap-2 mt-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              // Set vegetative stage values
-              const vegElements = {
-                "N (NO3-)": 199,
-                "N (NH4+)": 0,
-                P: 62,
-                K: 207,
-                Ca: 242,
-                Mg: 60,
-                S: 132,
-                Fe: 2.5,
-                Mn: 0.55,
-                Zn: 0.33,
-                B: 0.44,
-                Cu: 0.05,
-                Mo: 0.06,
-                Si: 0,
-                Na: 0,
-                Cl: 0,
-              };
-
-              Object.entries(vegElements).forEach(([element, value]) => {
-                if (element in elements) {
-                  handleUpdateElementTarget(element, value);
-                }
-              });
-
-              toast({
-                title: "Perfil Vegetativo Aplicado",
-                description:
-                  "Concentrações alvo definidas para fase vegetativa",
-              });
-            }}
-          >
-            Vegetativo
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              // Set flowering stage values
-              const floweringElements = {
-                "N (NO3-)": 149,
-                "N (NH4+)": 0,
-                P: 68,
-                K: 331,
-                Ca: 204,
-                Mg: 93,
-                S: 224,
-                Fe: 2.8,
-                Mn: 0.55,
-                Zn: 0.33,
-                B: 0.44,
-                Cu: 0.05,
-                Mo: 0.06,
-                Si: 0,
-                Na: 0,
-                Cl: 0,
-              };
-
-              Object.entries(floweringElements).forEach(([element, value]) => {
-                if (element in elements) {
-                  handleUpdateElementTarget(element, value);
-                }
-              });
-
-              toast({
-                title: "Perfil de Floração Aplicado",
-                description:
-                  "Concentrações alvo definidas para fase de floração",
-              });
-            }}
-          >
-            Floração
-          </Button>
-        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -152,6 +72,8 @@ const TargetElementsPanel: React.FC<TargetElementsPanelProps> = ({
                   )
                 }
                 placeholder="ppm"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
               />
             </div>
           ))}

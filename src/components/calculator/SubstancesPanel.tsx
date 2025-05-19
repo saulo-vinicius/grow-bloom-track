@@ -4,9 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, User, Search } from "lucide-react";
+import { Plus, User, Search, Edit, Trash2 } from "lucide-react";
 import { PremiumSubstance } from "@/lib/premium-substances";
 import { Substance, SelectedSubstance } from "@/types/calculator";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { deleteCustomSubstance } from "@/lib/recipes";
 
 interface SubstancesPanelProps {
   searchTerm: string;
@@ -32,6 +35,48 @@ const SubstancesPanel: React.FC<SubstancesPanelProps> = ({
   getElementColor,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+
+  const handleDeleteCustomSubstance = async (substance: Substance) => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para deletar substâncias",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // First check if it's in use
+      if (selectedSubstances.some(s => s.id === substance.id)) {
+        toast({
+          title: "Erro",
+          description: "Não é possível deletar uma substância que está em uso",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await deleteCustomSubstance(substance.id);
+      
+      toast({
+        title: "Sucesso",
+        description: "Substância deletada com sucesso",
+      });
+      
+      // Return true to indicate success
+      return true;
+    } catch (error) {
+      console.error("Error deleting substance:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao deletar substância",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
 
   return (
     <Card className="h-full">
@@ -118,6 +163,34 @@ const SubstancesPanel: React.FC<SubstancesPanelProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
+                    {/* Custom substance action buttons */}
+                    {userCustomSubstances.some((s) => s.id === substance.id) && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => openCustomSubstanceDialog(substance)}
+                          title="Editar substância"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-destructive"
+                          onClick={async () => {
+                            const success = await handleDeleteCustomSubstance(substance);
+                            // Refresh the list if needed via parent component
+                          }}
+                          title="Excluir substância"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    
+                    {/* Add/remove substance button */}
                     {selectedSubstances.some((s) => s.id === substance.id) ? (
                       <Button
                         size="sm"

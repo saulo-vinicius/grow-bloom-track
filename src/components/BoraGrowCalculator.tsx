@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +26,7 @@ import {
   deleteCustomSubstance
 } from "@/lib/recipes";
 import { v4 as uuidv4 } from 'uuid';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import our refactored components
 import SubstancesPanel from "./calculator/SubstancesPanel";
@@ -47,6 +49,7 @@ import {
 // Define a simplified User type that matches what our AuthContext provides
 const BoraGrowCalculator = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [calculationType, setCalculationType] = useState<string>("desired");
   const [solutionVolume, setSolutionVolume] = useState<number>(1);
   const [volumeUnit, setVolumeUnit] = useState<string>("liters");
@@ -707,7 +710,10 @@ const BoraGrowCalculator = () => {
         }
       };
 
-      const savedRecipe = await saveNutrientRecipe(recipeData);
+      // Make sure we have a valid structure before saving
+      const cleanedData = JSON.parse(JSON.stringify(recipeData));
+      
+      const savedRecipe = await saveNutrientRecipe(cleanedData);
       
       // Update local state
       setSavedRecipes([savedRecipe, ...savedRecipes]);
@@ -879,31 +885,31 @@ const BoraGrowCalculator = () => {
 
   return (
     <div className="bg-background">
-      <div className="max-w-[1200px] mx-auto">
+      <div className="max-w-[1200px] mx-auto px-2">
         <div className="grid grid-cols-1 gap-6">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center flex-wrap gap-2">
             <h2 className="text-xl font-semibold">Calculadora de Nutrientes</h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={handleOpenSavedRecipes}
-                className="flex items-center gap-1"
-              >
-                <BookOpen className="h-4 w-4" />
-                Receitas Salvas
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size={isMobile ? "sm" : "default"}
+              onClick={handleOpenSavedRecipes}
+              className="flex items-center gap-1 whitespace-nowrap"
+            >
+              <BookOpen className="h-4 w-4" />
+              Receitas Salvas
+            </Button>
           </div>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="p-4 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <Label htmlFor="solution-volume">Volume da Solução</Label>
                   <div className="flex items-center gap-2 mt-2">
                     <Input
                       id="solution-volume"
                       type="number"
+                      inputMode="decimal"
                       value={solutionVolume}
                       onChange={(e) => {
                         const newVolume = parseFloat(e.target.value) || 1;
@@ -913,7 +919,7 @@ const BoraGrowCalculator = () => {
                       step="0.1"
                     />
                     <Select value={volumeUnit} onValueChange={setVolumeUnit}>
-                      <SelectTrigger className="w-[100px]">
+                      <SelectTrigger className={isMobile ? "w-[80px]" : "w-[100px]"}>
                         <SelectValue placeholder="Unidade" />
                       </SelectTrigger>
                       <SelectContent>
@@ -941,8 +947,8 @@ const BoraGrowCalculator = () => {
           </Card>
 
           {/* Phase buttons */}
-          <div className="flex flex-wrap justify-between gap-3">
-            <div className="flex gap-3">
+          <div className="flex flex-wrap justify-between gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button onClick={setVegetativeValues} variant="outline" className="flex items-center gap-1">
                 Vegetativo
               </Button>
@@ -953,13 +959,13 @@ const BoraGrowCalculator = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className={`grid w-full ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}>
               <TabsTrigger value="targets">Concentrações Alvo</TabsTrigger>
               <TabsTrigger value="substances">Seleção de Substâncias</TabsTrigger>
             </TabsList>
 
             <TabsContent value="substances" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Substance Database */}
                 <SubstancesPanel
                   searchTerm={searchTerm}
@@ -992,21 +998,21 @@ const BoraGrowCalculator = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-center gap-4">
+          <div className={`flex ${isMobile ? 'flex-col' : 'justify-center'} gap-4`}>
             <Button
               size="lg"
-              className="px-8"
+              className={`${isMobile ? 'w-full' : 'px-8'}`}
               onClick={calculateNutrients}
               disabled={selectedSubstances.length === 0}
             >
               <Calculator className="mr-2 h-5 w-5" />
-              Calcular Solução de Nutrientes
+              Calcular Solução
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              className="px-8"
+              className={`${isMobile ? 'w-full' : 'px-8'}`}
               onClick={resetValues}
             >
               <X className="mr-2 h-5 w-5" />

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Json } from "@/integrations/supabase/types";
@@ -263,23 +262,19 @@ export const getUserCustomSubstances = async (): Promise<CustomSubstance[]> => {
 /**
  * Delete a custom substance by ID
  */
-export const deleteCustomSubstance = async (substanceId: string): Promise<void> => {
+export async function deleteCustomSubstance(substanceId: string): Promise<void> {
   try {
-    const user = await getAuthenticatedUser();
-
     const { error } = await supabase
-      .from("custom_substances")
+      .from('custom_substances')
       .delete()
-      .eq("id", substanceId)
-      .eq("user_id", user.id);
-
+      .eq('id', substanceId);
+    
     if (error) {
-      console.error("Error deleting custom substance:", error);
-      throw error;
+      console.error('Error deleting custom substance:', error);
+      throw new Error(error.message);
     }
-  } catch (error: any) {
-    console.error("Error in deleteCustomSubstance:", error);
-    toast("Erro ao excluir substância: " + (error.message || "Falha desconhecida"));
+  } catch (error) {
+    console.error('Error deleting custom substance:', error);
     throw error;
   }
-};
+}

@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface PlantStat {
   date: string;
@@ -226,19 +227,55 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         throw new Error('Plant limit reached for free user');
       }
       
+      // Generate a proper UUID for the plant ID
+      const newPlantId = uuidv4();
+      
       const newPlant: Plant = {
         ...plantData,
-        id: Date.now().toString(),
+        id: newPlantId,
         addedOn: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
       };
       
+      // If user is online, try to save directly to Supabase first
+      if (user.id) {
+        try {
+          const dbPlant = {
+            id: newPlant.id,
+            user_id: user.id,
+            name: newPlant.name,
+            species: newPlant.species,
+            location: newPlant.location,
+            image_url: newPlant.imageUrl,
+            added_on: newPlant.addedOn,
+            last_updated: newPlant.lastUpdated,
+            growth_phase: newPlant.growthPhase,
+            stats: newPlant.stats as unknown as Json
+          };
+          
+          const { error } = await supabase
+            .from('plants')
+            .insert(dbPlant);
+            
+          if (error) {
+            console.error('Error saving plant to Supabase:', error);
+            // Continue with local storage saving as backup
+          }
+        } catch (error) {
+          console.error('Error in Supabase save:', error);
+        }
+      }
+      
+      // Update local state
       setPlants(prevPlants => [...prevPlants, newPlant]);
+      
       toast({
         title: "Sucesso!",
         description: "Planta adicionada com sucesso!",
         variant: "default"
       });
+      
+      return;
     } catch (err: any) {
       console.error('Error adding plant:', err);
       setError('Failed to add plant');
