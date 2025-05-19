@@ -595,6 +595,64 @@ const BoraGrowCalculator = () => {
     });
   };
 
+  // Define ion conductivity constants for EC calculation
+  // Values are equivalent conductivity (mS/cm per mmol/L)
+  const ionConductivity: Record<string, number> = {
+    // Cations
+    "NH4+": 0.0733,
+    "K+": 0.0735,
+    "Ca2+": 0.119,
+    "Mg2+": 0.106,
+    "Fe2+": 0.108,
+    "Mn2+": 0.107,
+    "Zn2+": 0.105,
+    "Cu2+": 0.107,
+    // Anions
+    "NO3-": 0.0714,
+    "H2PO4-": 0.036,
+    "HPO42-": 0.079,
+    "SO42-": 0.160,
+    "Cl-": 0.0760,
+    "BO3-": 0.032,
+    "MoO4-": 0.081
+  };
+
+  // Element to ion mapping for conductivity calculation
+  const elementToIons: Record<string, { ion: string, factor: number }[]> = {
+    "N (NO3-)": [{ ion: "NO3-", factor: 1 }],
+    "N (NH4+)": [{ ion: "NH4+", factor: 1 }],
+    "P": [{ ion: "H2PO4-", factor: 0.5 }, { ion: "HPO42-", factor: 0.5 }], // Simplified approximation
+    "K": [{ ion: "K+", factor: 1 }],
+    "Ca": [{ ion: "Ca2+", factor: 1 }],
+    "Mg": [{ ion: "Mg2+", factor: 1 }],
+    "S": [{ ion: "SO42-", factor: 1 }],
+    "Fe": [{ ion: "Fe2+", factor: 1 }],
+    "Mn": [{ ion: "Mn2+", factor: 1 }],
+    "Zn": [{ ion: "Zn2+", factor: 1 }],
+    "B": [{ ion: "BO3-", factor: 1 }],
+    "Cu": [{ ion: "Cu2+", factor: 1 }],
+    "Mo": [{ ion: "MoO4-", factor: 1 }],
+    "Cl": [{ ion: "Cl-", factor: 1 }]
+  };
+
+  // Element atomic/molecular weights for conversion from ppm to mmol/L
+  const elementWeights: Record<string, number> = {
+    "N (NO3-)": 14.01, // Nitrogen atomic weight
+    "N (NH4+)": 14.01, // Nitrogen atomic weight
+    "P": 30.97, // Phosphorus atomic weight
+    "K": 39.10, // Potassium atomic weight
+    "Ca": 40.08, // Calcium atomic weight
+    "Mg": 24.31, // Magnesium atomic weight
+    "S": 32.07, // Sulfur atomic weight
+    "Fe": 55.85, // Iron atomic weight
+    "Mn": 54.94, // Manganese atomic weight
+    "Zn": 65.38, // Zinc atomic weight
+    "B": 10.81, // Boron atomic weight
+    "Cu": 63.55, // Copper atomic weight
+    "Mo": 95.95, // Molybdenum atomic weight
+    "Cl": 35.45  // Chlorine atomic weight
+  };
+
   const calculateNutrients = (): void => {
     if (selectedSubstances.length === 0) {
       toast({
@@ -661,10 +719,29 @@ const BoraGrowCalculator = () => {
       };
     });
     
-    // Calculate EC value (simplified estimation)
-    // EC is roughly 0.10 mS/cm per 100 ppm of total dissolved solids
-    const totalPpm = Object.values(totalElements).reduce((sum, val) => sum + val, 0);
-    const ecValue = (totalPpm / 100 * 0.10).toFixed(2);
+    // Calculate EC value using ion conductivity method (more accurate)
+    let totalEC = 0;
+    
+    // For each element, calculate its contribution to EC
+    Object.entries(totalElements).forEach(([element, concentration]) => {
+      // Skip if element is not in our mapping
+      if (!elementToIons[element] || !elementWeights[element]) return;
+      
+      // Convert from ppm (mg/L) to mmol/L
+      const mmolPerL = concentration / elementWeights[element];
+      
+      // Apply ion conductivity
+      elementToIons[element].forEach(({ ion, factor }) => {
+        if (ionConductivity[ion]) {
+          // Multiply by factor to account for ion ratios
+          const ionContribution = mmolPerL * factor * ionConductivity[ion];
+          totalEC += ionContribution;
+        }
+      });
+    });
+    
+    // Format EC value to 2 decimal places
+    const ecValue = totalEC.toFixed(2);
     
     const calculationResults: CalculationResult = {
       substances: substanceResults,
@@ -777,8 +854,8 @@ const BoraGrowCalculator = () => {
     } catch (error) {
       console.error("Error deleting recipe:", error);
       toast({
-        title: "Erro",
-        description: "Falha ao excluir receita",
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir a receita",
         variant: "destructive",
       });
     }

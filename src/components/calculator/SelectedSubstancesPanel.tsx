@@ -53,9 +53,15 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
                         pattern="[0-9]*[.,]?[0-9]*"
                         value={substance.weight || ""}
                         onChange={(e) => {
-                          // Handle different decimal separators (dot or comma)
                           const value = e.target.value.replace(/,/g, '.');
-                          handleUpdateWeight(substance.id, parseFloat(value) || 0);
+                          if (value === '' || value === '.') {
+                            handleUpdateWeight(substance.id, 0);
+                          } else {
+                            const numValue = parseFloat(value);
+                            if (!isNaN(numValue)) {
+                              handleUpdateWeight(substance.id, numValue);
+                            }
+                          }
                         }}
                         className="w-full"
                       />

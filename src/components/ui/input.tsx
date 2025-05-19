@@ -1,14 +1,14 @@
 
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onChange, ...props }, ref) => {
-    // Special handling for number inputs to allow commas
+  ({ className, type, onChange, onBlur, ...props }, ref) => {
+    // Special handling for number and text inputs to allow commas
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (type === 'number' && e.target.value.includes(',')) {
-        // Replace commas with dots for number inputs
+      // Handle comma-to-dot conversion for both number and text inputs with inputMode="decimal"
+      if ((type === 'number' || props.inputMode === 'decimal') && e.target.value.includes(',')) {
+        // Replace commas with dots for decimal inputs
         const value = e.target.value.replace(/,/g, '.');
         const newEvent = {
           ...e,
@@ -23,6 +23,22 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         onChange(e);
       }
     };
+
+    // Handle blur event for extra validation on decimals
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      if (props.inputMode === 'decimal' && e.target.value) {
+        // Ensure valid decimal format when leaving the field
+        let value = e.target.value.replace(/,/g, '.');
+        
+        // If it's a valid number, format it
+        if (!isNaN(parseFloat(value))) {
+          e.target.value = value;
+        }
+      }
+      
+      // Call original onBlur if provided
+      if (onBlur) onBlur(e);
+    };
     
     return (
       <input
@@ -32,6 +48,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         onChange={handleInputChange}
+        onBlur={handleBlur}
         ref={ref}
         {...props}
       />
