@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -108,6 +109,10 @@ const PlantDetailPage: React.FC = () => {
       humidity: stat.humidity,
       ppm: stat.ppm,
     }));
+
+  // Check if plant has any stats before rendering
+  const hasStats = plant.stats && plant.stats.length > 0;
+  const latestStat = hasStats ? plant.stats[0] : null;
 
   return (
     <Layout>
@@ -276,61 +281,75 @@ const PlantDetailPage: React.FC = () => {
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={chartData}
-                          margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                    {hasStats ? (
+                      <>
+                        <div className="h-[300px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart
+                              data={chartData}
+                              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="date" />
+                              <YAxis />
+                              <Tooltip />
+                              <Line type="monotone" dataKey="temperature" stroke="#4d9152" name="Temperature (°C)" />
+                              <Line type="monotone" dataKey="humidity" stroke="#3a7740" name="Humidity (%)" />
+                              <Line type="monotone" dataKey="ppm" stroke="#305f35" name="PPM" />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                        
+                        <div className="mt-6 space-y-4">
+                          <h3 className="font-medium">Recent Stats</h3>
+                          
+                          {plant.stats.slice(0, 5).map((stat, index) => (
+                            <Card key={index}>
+                              <CardContent className="p-4">
+                                <div className="flex justify-between items-start">
+                                  <div className="text-sm text-muted-foreground">
+                                    {format(new Date(stat.date), 'MMM dd, yyyy')}
+                                  </div>
+                                  
+                                  <div className="flex space-x-4">
+                                    <div className="text-right">
+                                      <div className="text-xs text-muted-foreground">{t('plant.temperature')}</div>
+                                      <div className="font-medium">{stat.temperature}°C</div>
+                                    </div>
+                                    
+                                    <div className="text-right">
+                                      <div className="text-xs text-muted-foreground">{t('plant.humidity')}</div>
+                                      <div className="font-medium">{stat.humidity}%</div>
+                                    </div>
+                                    
+                                    <div className="text-right">
+                                      <div className="text-xs text-muted-foreground">{t('plant.ppm')}</div>
+                                      <div className="font-medium">{stat.ppm}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {stat.notes && (
+                                  <div className="mt-2 text-sm border-t pt-2">
+                                    {stat.notes}
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Sem estatísticas para exibir ainda.</p>
+                        <Button 
+                          className="mt-4 bg-plantgreen-600 hover:bg-plantgreen-700"
+                          onClick={() => setIsAddingStat(true)}
                         >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="temperature" stroke="#4d9152" name="Temperature (°C)" />
-                          <Line type="monotone" dataKey="humidity" stroke="#3a7740" name="Humidity (%)" />
-                          <Line type="monotone" dataKey="ppm" stroke="#305f35" name="PPM" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                    
-                    <div className="mt-6 space-y-4">
-                      <h3 className="font-medium">Recent Stats</h3>
-                      
-                      {plant.stats.slice(0, 5).map((stat, index) => (
-                        <Card key={index}>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="text-sm text-muted-foreground">
-                                {format(new Date(stat.date), 'MMM dd, yyyy')}
-                              </div>
-                              
-                              <div className="flex space-x-4">
-                                <div className="text-right">
-                                  <div className="text-xs text-muted-foreground">{t('plant.temperature')}</div>
-                                  <div className="font-medium">{stat.temperature}°C</div>
-                                </div>
-                                
-                                <div className="text-right">
-                                  <div className="text-xs text-muted-foreground">{t('plant.humidity')}</div>
-                                  <div className="font-medium">{stat.humidity}%</div>
-                                </div>
-                                
-                                <div className="text-right">
-                                  <div className="text-xs text-muted-foreground">{t('plant.ppm')}</div>
-                                  <div className="font-medium">{stat.ppm}</div>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {stat.notes && (
-                              <div className="mt-2 text-sm border-t pt-2">
-                                {stat.notes}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                          {t('plant.updateStats')}
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -345,46 +364,52 @@ const PlantDetailPage: React.FC = () => {
               </CardHeader>
               
               <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>{t('plant.temperature')}</Label>
-                    <div className="flex items-center">
-                      <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
-                        <div
-                          className="bg-plantgreen-500 h-4"
-                          style={{ width: `${Math.min(100, (plant.stats[0].temperature / 40) * 100)}%` }}
-                        ></div>
+                {hasStats ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{t('plant.temperature')}</Label>
+                      <div className="flex items-center">
+                        <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+                          <div
+                            className="bg-plantgreen-500 h-4"
+                            style={{ width: `${Math.min(100, (latestStat.temperature / 40) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="ml-2 font-medium">{latestStat.temperature}°C</span>
                       </div>
-                      <span className="ml-2 font-medium">{plant.stats[0].temperature}°C</span>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>{t('plant.humidity')}</Label>
+                      <div className="flex items-center">
+                        <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+                          <div
+                            className="bg-plantgreen-500 h-4"
+                            style={{ width: `${Math.min(100, latestStat.humidity)}%` }}
+                          ></div>
+                        </div>
+                        <span className="ml-2 font-medium">{latestStat.humidity}%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>{t('plant.ppm')}</Label>
+                      <div className="flex items-center">
+                        <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+                          <div
+                            className="bg-plantgreen-500 h-4"
+                            style={{ width: `${Math.min(100, (latestStat.ppm / 1500) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="ml-2 font-medium">{latestStat.ppm}</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label>{t('plant.humidity')}</Label>
-                    <div className="flex items-center">
-                      <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
-                        <div
-                          className="bg-plantgreen-500 h-4"
-                          style={{ width: `${Math.min(100, plant.stats[0].humidity)}%` }}
-                        ></div>
-                      </div>
-                      <span className="ml-2 font-medium">{plant.stats[0].humidity}%</span>
-                    </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">Sem estatísticas disponíveis ainda.</p>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label>{t('plant.ppm')}</Label>
-                    <div className="flex items-center">
-                      <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
-                        <div
-                          className="bg-plantgreen-500 h-4"
-                          style={{ width: `${Math.min(100, (plant.stats[0].ppm / 1500) * 100)}%` }}
-                        ></div>
-                      </div>
-                      <span className="ml-2 font-medium">{plant.stats[0].ppm}</span>
-                    </div>
-                  </div>
-                </div>
+                )}
                 
                 <div className="mt-6 border-t pt-4">
                   <Button 
