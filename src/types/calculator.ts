@@ -1,4 +1,6 @@
+
 import { Json } from "@/integrations/supabase/types";
+import { PremiumSubstance } from "@/lib/premium-substances";
 
 export interface SimpleUser {
   id: string;
@@ -92,5 +94,5 @@ export interface SubstancePanelProps {
   openCustomSubstanceDialog: (substance?: Substance) => void;
   userCustomSubstances: Substance[];
   getElementColor: (element: string) => string;
-  onDeleteCustomSubstance?: (id: string) => void;
+  onDeleteCustomSubstance?: (id: string) => Promise<boolean | void>;
 }

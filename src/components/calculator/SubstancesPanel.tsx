@@ -6,24 +6,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, User, Search, Edit, Trash2 } from "lucide-react";
 import { PremiumSubstance } from "@/lib/premium-substances";
-import { Substance, SelectedSubstance } from "@/types/calculator";
+import { Substance, SelectedSubstance, SubstancePanelProps } from "@/types/calculator";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { deleteCustomSubstance } from "@/lib/recipes";
 
-interface SubstancesPanelProps {
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  filteredSubstances: (Substance | PremiumSubstance)[];
-  selectedSubstances: SelectedSubstance[];
-  handleAddSubstance: (substance: Substance) => void;
-  handleRemoveSubstance: (id: string) => void;
-  openCustomSubstanceDialog: (substance?: Substance) => void;
-  userCustomSubstances: Substance[];
-  getElementColor: (element: string) => string;
-}
-
-const SubstancesPanel: React.FC<SubstancesPanelProps> = ({
+const SubstancesPanel: React.FC<SubstancePanelProps> = ({
   searchTerm,
   setSearchTerm,
   filteredSubstances,
@@ -33,6 +21,7 @@ const SubstancesPanel: React.FC<SubstancesPanelProps> = ({
   openCustomSubstanceDialog,
   userCustomSubstances,
   getElementColor,
+  onDeleteCustomSubstance,
 }) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -58,7 +47,15 @@ const SubstancesPanel: React.FC<SubstancesPanelProps> = ({
         return;
       }
       
-      await deleteCustomSubstance(substance.id);
+      // Use the callback if provided, otherwise call the function directly
+      if (onDeleteCustomSubstance) {
+        const success = await onDeleteCustomSubstance(substance.id);
+        if (success === false) {
+          return false;
+        }
+      } else {
+        await deleteCustomSubstance(substance.id);
+      }
       
       toast({
         title: "Sucesso",
