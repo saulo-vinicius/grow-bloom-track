@@ -23,7 +23,7 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Function to handle weight input changes with proper decimal handling
+  // Enhanced function to handle weight input changes with proper decimal handling for both commas and dots
   const handleWeightChange = (id: string, inputValue: string) => {
     // First replace commas with dots for decimal values
     const value = inputValue.replace(/,/g, '.');
@@ -69,7 +69,7 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
                         type="text"
                         inputMode="decimal"
                         pattern="[0-9]*[.,]?[0-9]*"
-                        value={substance.weight || ""}
+                        value={substance.weight === 0 ? "" : substance.weight.toString().replace(".", ",")}
                         onChange={(e) => handleWeightChange(substance.id, e.target.value)}
                         className="w-full"
                       />

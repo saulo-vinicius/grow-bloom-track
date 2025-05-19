@@ -13,7 +13,6 @@ export interface NutrientRecipe {
   elements: any[];
   solution_volume: number;
   volume_unit: string;
-  data?: any;
   ec_value?: number;
   user_id?: string;
   created_at?: string;
@@ -71,21 +70,14 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
       user_id: user.id,
       substances: recipe.substances || [],
       elements: recipe.elements || [],
-      data: {
-        substances: recipe.substances || [],
-        elements: recipe.elements || [],
-        ecValue: recipe.ec_value || 0,
-        solutionVolume: recipe.solution_volume || 1,
-        volumeUnit: recipe.volume_unit || 'liters',
-      }
+      // Remove 'data' field as it doesn't exist in the database schema
     };
 
     // Convert arrays to JSON compatible format
     const dbRecipe = {
       ...recipeData,
       substances: recipeData.substances as unknown as Json,
-      elements: recipeData.elements as unknown as Json,
-      data: recipeData.data as unknown as Json
+      elements: recipeData.elements as unknown as Json
     };
 
     console.log("Saving recipe:", dbRecipe);
@@ -101,7 +93,11 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
       throw error;
     }
 
-    return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
+    return {
+      ...data,
+      substances: Array.isArray(data.substances) ? data.substances : [],
+      elements: Array.isArray(data.elements) ? data.elements : []
+    };
   } catch (error: any) {
     console.error("Error in saveNutrientRecipe:", error);
     toast("Erro ao salvar receita: " + (error.message || "Falha desconhecida"));
@@ -127,7 +123,11 @@ export const getUserRecipes = async (): Promise<NutrientRecipe[]> => {
       throw error;
     }
 
-    return (data || []).map(item => convertSupabaseToNutrientRecipe(item as SupabaseNutrientRecipe));
+    return (data || []).map(item => ({
+      ...item,
+      substances: Array.isArray(item.substances) ? item.substances : [],
+      elements: Array.isArray(item.elements) ? item.elements : []
+    }));
   } catch (error: any) {
     console.error("Error in getUserRecipes:", error);
     toast("Erro ao carregar receitas: " + (error.message || "Falha desconhecida"));
