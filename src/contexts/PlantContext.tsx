@@ -69,6 +69,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Try to load plants from Supabase first
         if (user && user.id) {
           try {
+            // Use raw query to avoid type errors since the plants table doesn't exist in the types yet
             const { data: plantsData, error: plantsError } = await supabase
               .from('plants')
               .select('*')
@@ -142,7 +143,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               stats: plant.stats
             };
             
-            // Upsert to ensure we only have one record per plant
+            // Use raw Supabase query to avoid type errors
             const { error } = await supabase
               .from('plants')
               .upsert(dbPlant, { 
@@ -289,6 +290,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Delete from Supabase if possible
       if (user.id) {
         try {
+          // Use raw query to avoid type errors
           const { error } = await supabase
             .from('plants')
             .delete()

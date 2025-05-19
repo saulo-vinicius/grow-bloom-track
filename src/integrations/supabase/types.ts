@@ -72,6 +72,45 @@ export type Database = {
         }
         Relationships: []
       }
+      plants: {
+        Row: {
+          added_on: string | null
+          growth_phase: string | null
+          id: string
+          image_url: string | null
+          last_updated: string | null
+          location: string | null
+          name: string
+          species: string | null
+          stats: Json | null
+          user_id: string
+        }
+        Insert: {
+          added_on?: string | null
+          growth_phase?: string | null
+          id?: string
+          image_url?: string | null
+          last_updated?: string | null
+          location?: string | null
+          name: string
+          species?: string | null
+          stats?: Json | null
+          user_id: string
+        }
+        Update: {
+          added_on?: string | null
+          growth_phase?: string | null
+          id?: string
+          image_url?: string | null
+          last_updated?: string | null
+          location?: string | null
+          name?: string
+          species?: string | null
+          stats?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
