@@ -19,10 +19,9 @@ export interface NutrientRecipe {
 }
 
 // Type to handle Supabase data conversion
-type SupabaseNutrientRecipe = Omit<NutrientRecipe, 'substances' | 'elements' | 'data'> & {
+type SupabaseNutrientRecipe = Omit<NutrientRecipe, 'substances' | 'elements'> & {
   substances: Json;
   elements: Json;
-  data: Json;
 };
 
 /**
@@ -32,8 +31,7 @@ const convertSupabaseToNutrientRecipe = (data: SupabaseNutrientRecipe): Nutrient
   return {
     ...data,
     substances: Array.isArray(data.substances) ? data.substances : [],
-    elements: Array.isArray(data.elements) ? data.elements : [],
-    data: data.data || null
+    elements: Array.isArray(data.elements) ? data.elements : []
   };
 };
 
@@ -70,7 +68,6 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
       user_id: user.id,
       substances: recipe.substances || [],
       elements: recipe.elements || [],
-      // Remove 'data' field as it doesn't exist in the database schema
     };
 
     // Convert arrays to JSON compatible format
