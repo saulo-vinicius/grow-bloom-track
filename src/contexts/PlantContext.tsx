@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useAuth } from './AuthContext';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface PlantStat {
   date: string;
@@ -129,7 +130,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (user.id) {
         plants.forEach(async (plant) => {
           try {
-            // Convert to database format
+            // Convert to database format and ensure stats is properly converted to Json
             const dbPlant = {
               id: plant.id,
               user_id: user.id,
@@ -140,7 +141,7 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               added_on: plant.addedOn,
               last_updated: plant.lastUpdated,
               growth_phase: plant.growthPhase,
-              stats: plant.stats
+              stats: plant.stats as unknown as Json // Explicit type conversion
             };
             
             // Use raw Supabase query to avoid type errors

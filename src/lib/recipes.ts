@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { CustomSubstance } from "@/types/calculator";
 
 export interface NutrientRecipe {
   id?: string;
@@ -63,6 +64,7 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
   try {
     const user = await getAuthenticatedUser();
     
+    // Ensure the recipe data is properly formatted for JSON serialization
     const recipeData = {
       ...recipe,
       user_id: user.id,
@@ -77,11 +79,19 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
       }
     };
 
-    console.log("Saving recipe:", recipeData);
+    // Convert arrays to JSON compatible format
+    const dbRecipe = {
+      ...recipeData,
+      substances: recipeData.substances as unknown as Json,
+      elements: recipeData.elements as unknown as Json,
+      data: recipeData.data as unknown as Json
+    };
+
+    console.log("Saving recipe:", dbRecipe);
 
     const { data, error } = await supabase
       .from("nutrient_recipes")
-      .insert(recipeData)
+      .insert(dbRecipe)
       .select()
       .single();
 
@@ -178,13 +188,15 @@ export const getRecipeById = async (recipeId: string): Promise<NutrientRecipe> =
 /**
  * Save a custom substance to the database
  */
-export const saveCustomSubstance = async (substance: any): Promise<any> => {
+export const saveCustomSubstance = async (substance: CustomSubstance): Promise<CustomSubstance> => {
   try {
     const user = await getAuthenticatedUser();
 
+    // Ensure the substance data is properly formatted for JSON serialization
     const substanceData = {
       ...substance,
       user_id: user.id,
+      elements: substance.elements as unknown as Json
     };
 
     const { data, error } = await supabase
@@ -198,7 +210,11 @@ export const saveCustomSubstance = async (substance: any): Promise<any> => {
       throw error;
     }
 
-    return data;
+    // Convert back to our internal format
+    return {
+      ...data,
+      elements: data.elements as unknown as Record<string, number>
+    };
   } catch (error: any) {
     console.error("Error in saveCustomSubstance:", error);
     toast("Erro ao salvar substância: " + (error.message || "Falha desconhecida"));
@@ -209,7 +225,7 @@ export const saveCustomSubstance = async (substance: any): Promise<any> => {
 /**
  * Get all custom substances for the current user
  */
-export const getUserCustomSubstances = async (): Promise<any[]> => {
+export const getUserCustomSubstances = async (): Promise<CustomSubstance[]> => {
   try {
     const user = await getAuthenticatedUser();
 
@@ -223,7 +239,11 @@ export const getUserCustomSubstances = async (): Promise<any[]> => {
       throw error;
     }
 
-    return data || [];
+    // Convert elements to our internal format
+    return (data || []).map(item => ({
+      ...item,
+      elements: item.elements as unknown as Record<string, number>
+    }));
   } catch (error: any) {
     console.error("Error in getUserCustomSubstances:", error);
     toast("Erro ao carregar substâncias personalizadas: " + (error.message || "Falha desconhecida"));

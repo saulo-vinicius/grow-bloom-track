@@ -13,7 +13,8 @@ interface PlantCardProps {
 
 const PlantCard: React.FC<PlantCardProps> = ({ plant }) => {
   const { t } = useTranslation();
-  const latestStat = plant.stats[0];
+  // Add a safe check to make sure stats array exists and has elements
+  const latestStat = plant.stats && plant.stats.length > 0 ? plant.stats[0] : null;
 
   return (
     <Link to={`/plants/${plant.id}`}>
@@ -36,15 +37,15 @@ const PlantCard: React.FC<PlantCardProps> = ({ plant }) => {
           <div className="mt-4 plant-stats">
             <div className="stat-item">
               <span className="text-xs">{t('plant.temperature')}</span>
-              <span className="stat-value">{latestStat.temperature}°C</span>
+              <span className="stat-value">{latestStat?.temperature ?? '-'}°C</span>
             </div>
             <div className="stat-item">
               <span className="text-xs">{t('plant.humidity')}</span>
-              <span className="stat-value">{latestStat.humidity}%</span>
+              <span className="stat-value">{latestStat?.humidity ?? '-'}%</span>
             </div>
             <div className="stat-item">
               <span className="text-xs">{t('plant.ppm')}</span>
-              <span className="stat-value">{latestStat.ppm}</span>
+              <span className="stat-value">{latestStat?.ppm ?? '-'}</span>
             </div>
             <div className="stat-item">
               <span className="text-xs">{t('plant.growthPhase')}</span>

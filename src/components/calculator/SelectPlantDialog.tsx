@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { SimpleUser } from "@/types/calculator";
 import { useAuth } from "@/contexts/AuthContext";
+import { Json } from "@/integrations/supabase/types";
 
 interface SelectPlantDialogProps {
   open: boolean;
@@ -95,7 +96,7 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
       }
 
       if (isNewPlant) {
-        // Create a new plant
+        // Create a new plant with initial empty stats array
         const newPlant = {
           name: plantName,
           species: "Não especificada",
@@ -107,36 +108,36 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
           growthPhase: "Vegetativa",
         };
         
+        // Add the plant first
         await addPlant(newPlant);
         
-        // Wait a moment for the plant to be added
-        setTimeout(async () => {
-          // Get the newly created plant (should be the first one with this name)
-          const newlyAddedPlant = plants.find(p => p.name === plantName);
+        // Find the newly added plant by name after state update
+        // We need to fetch the latest plants from the context after the update
+        const currentPlants = usePlants().plants;
+        const newlyAddedPlant = currentPlants.find(p => p.name === plantName);
+        
+        if (newlyAddedPlant) {
+          // Add the recipe as a stat to this plant
+          await addPlantStat(newlyAddedPlant.id, {
+            temperature: 24,
+            humidity: 65,
+            ppm: 800,
+            notes: `Receita aplicada: ${currentRecipeData.name || "Sem nome"}`,
+            recipeApplied: {
+              type: "nutrient",
+              name: currentRecipeData.name || "Receita sem nome",
+              description: currentRecipeData.description || "",
+              data: currentRecipeData
+            }
+          });
           
-          if (newlyAddedPlant) {
-            // Add the recipe as a stat to this plant
-            await addPlantStat(newlyAddedPlant.id, {
-              temperature: 24,
-              humidity: 65,
-              ppm: 800,
-              notes: `Receita aplicada: ${currentRecipeData.name || "Sem nome"}`,
-              recipeApplied: {
-                type: "nutrient",
-                name: currentRecipeData.name || "Receita sem nome",
-                description: currentRecipeData.description || "",
-                data: currentRecipeData
-              }
-            });
-            
-            toast({
-              title: "Sucesso",
-              description: "Receita aplicada à nova planta com sucesso!",
-            });
-          } else {
-            throw new Error("Falha ao encontrar a planta recém-criada");
-          }
-        }, 500);
+          toast({
+            title: "Sucesso",
+            description: "Receita aplicada à nova planta com sucesso!",
+          });
+        } else {
+          throw new Error("Falha ao encontrar a planta recém-criada");
+        }
       } else {
         // Add recipe to existing plant
         await addPlantStat(selectedPlantId, {
@@ -160,13 +161,16 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
 
       // Try to save the recipe data to Supabase nutrient_recipes table
       try {
+        const recipeSubstances = currentRecipeData.substances || [];
+        const recipeElements = currentRecipeData.elements || [];
+        
         const { error } = await supabase.from("nutrient_recipes").insert([
           {
             user_id: user.id,
             name: `Planta: ${isNewPlant ? plantName : plants.find(p => p.id === selectedPlantId)?.name}`,
             description: `Receita aplicada à planta: ${isNewPlant ? plantName : plants.find(p => p.id === selectedPlantId)?.name}`,
-            substances: currentRecipeData.substances || [],
-            elements: currentRecipeData.elements || [],
+            substances: recipeSubstances as unknown as Json,
+            elements: recipeElements as unknown as Json,
             solution_volume: currentRecipeData.solutionVolume || 1,
             volume_unit: currentRecipeData.volumeUnit || "liters",
             ec_value: parseFloat(currentRecipeData.ecValue || "0"),
