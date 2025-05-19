@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,6 +57,7 @@ const BoraGrowCalculator = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [results, setResults] = useState<CalculationResult | null>(null);
   const [activeTab, setActiveTab] = useState<string>("targets");
+  const [activePhase, setActivePhase] = useState<string>("none");
 
   // Dialogs state
   const [customSubstanceDialogOpen, setCustomSubstanceDialogOpen] = useState<boolean>(false);
@@ -78,30 +78,30 @@ const BoraGrowCalculator = () => {
   // Calculator context
   const calculatorContext = useCalculator();
   
-  // Define nutrient color coding
+  // Define nutrient color coding with new colors
   const nutrientColors: Record<string, string> = {
-    // Primary Macronutrients
-    "N (NO3-)": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
-    "N (NH4+)": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
-    P: "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
-    "P₂O₅": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
-    K: "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
-    "K₂O": "bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-300",
-    // Secondary Macronutrients
-    Mg: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400",
-    Ca: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400",
-    S: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-400",
+    // Primary Macronutrients - now green
+    "N (NO3-)": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
+    "N (NH4+)": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
+    P: "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
+    "P₂O₅": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
+    K: "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
+    "K₂O": "bg-green-100 dark:bg-green-800/30 text-green-800 dark:text-green-300",
+    // Secondary Macronutrients - now blue
+    Mg: "bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300",
+    Ca: "bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300",
+    S: "bg-blue-100 dark:bg-blue-800/30 text-blue-800 dark:text-blue-300",
     // Micronutrients - all using gray tones
-    Fe: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Mn: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Zn: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    B: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Cu: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Mo: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Si: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    "SiO₂": "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Na: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
-    Cl: "bg-gray-300 dark:bg-gray-600/30 text-gray-600 dark:text-gray-400",
+    Fe: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Mn: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Zn: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    B: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Cu: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Mo: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Si: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    "SiO₂": "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Na: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
+    Cl: "bg-gray-200 dark:bg-gray-700/30 text-gray-700 dark:text-gray-300",
   };
 
   // Get color for element
@@ -146,124 +146,148 @@ const BoraGrowCalculator = () => {
   // Expanded database of substances from HydroBuddy (matching the repository reference)
   const defaultSubstanceDatabase: Substance[] = [
     {
-      id: "ammonium-nitrate",
-      name: "Nitrato de Amônio",
-      formula: "NH4NO3",
-      elements: { "N (NH4+)": 17.5, "N (NO3-)": 17.5 },
+      id: "ammonium-chloride",
+      name: "Ammonium Chloride",
+      formula: "NH4Cl",
+      elements: { "N (NH4+)": 26.2, Cl: 66.3 },
     },
     {
-      id: "calcium-nitrate",
-      name: "Nitrato de Cálcio",
-      formula: "Ca(NO3)2",
-      elements: { Ca: 19.0, "N (NO3-)": 15.5 },
+      id: "ammonium-dibasic-phosphate",
+      name: "Ammonium Dibasic Phosphate",
+      formula: "(NH4)2HPO4",
+      elements: { "N (NH4+)": 21.2, P: 23.5 },
     },
     {
-      id: "potassium-nitrate",
-      name: "Nitrato de Potássio",
-      formula: "KNO3",
-      elements: { K: 38.7, "N (NO3-)": 13.9 },
+      id: "ammonium-monobasic-phosphate",
+      name: "Ammonium Monobasic Phosphate",
+      formula: "NH4H2PO4",
+      elements: { "N (NH4+)": 12.2, P: 26.7 },
     },
     {
-      id: "magnesium-nitrate",
-      name: "Nitrato de Magnésio",
-      formula: "Mg(NO3)2·6H2O",
-      elements: { Mg: 9.5, "N (NO3-)": 10.9 },
-    },
-    {
-      id: "mono-potassium-phosphate",
-      name: "Fosfato Monopotássico",
-      formula: "KH2PO4",
-      elements: { K: 28.7, P: 22.8 },
-    },
-    {
-      id: "di-potassium-phosphate",
-      name: "Fosfato Dipotássico",
-      formula: "K2HPO4",
-      elements: { K: 44.9, P: 17.8 },
-    },
-    {
-      id: "potassium-sulfate",
-      name: "Sulfato de Potássio",
-      formula: "K2SO4",
-      elements: { K: 45.0, S: 18.4 },
-    },
-    {
-      id: "magnesium-sulfate",
-      name: "Sulfato de Magnésio (Sal Epsom)",
-      formula: "MgSO4·7H2O",
-      elements: { Mg: 9.8, S: 13.0 },
-    },
-    {
-      id: "calcium-sulfate",
-      name: "Sulfato de Cálcio (Gesso)",
-      formula: "CaSO4·2H2O",
-      elements: { Ca: 23.3, S: 18.6 },
-    },
-    {
-      id: "calcium-chloride",
-      name: "Cloreto de Cálcio",
-      formula: "CaCl2",
-      elements: { Ca: 36.1, Cl: 63.9 },
-    },
-    {
-      id: "potassium-chloride",
-      name: "Cloreto de Potássio",
-      formula: "KCl",
-      elements: { K: 52.4, Cl: 47.6 },
-    },
-    {
-      id: "calcium-carbonate",
-      name: "Carbonato de Cálcio",
-      formula: "CaCO3",
-      elements: { Ca: 40.0 },
-    },
-    {
-      id: "iron-edta",
-      name: "Ferro EDTA (13%)",
-      formula: "Fe-EDTA",
-      elements: { Fe: 13.0 },
-    },
-    {
-      id: "iron-dtpa",
-      name: "Ferro DTPA (10%)",
-      formula: "Fe-DTPA",
-      elements: { Fe: 10.0 },
-    },
-    {
-      id: "iron-eddha",
-      name: "Ferro EDDHA (6%)",
-      formula: "Fe-EDDHA",
-      elements: { Fe: 6.0 },
-    },
-    {
-      id: "manganese-sulfate",
-      name: "Sulfato de Manganês",
-      formula: "MnSO4·H2O",
-      elements: { Mn: 32.5, S: 19.0 },
-    },
-    {
-      id: "zinc-sulfate",
-      name: "Sulfato de Zinco",
-      formula: "ZnSO4·7H2O",
-      elements: { Zn: 22.7, S: 11.0 },
-    },
-    {
-      id: "copper-sulfate",
-      name: "Sulfato de Cobre",
-      formula: "CuSO4·5H2O",
-      elements: { Cu: 25.5, S: 12.8 },
+      id: "ammonium-sulfate",
+      name: "Ammonium Sulfate",
+      formula: "(NH4)2SO4",
+      elements: { "N (NH4+)": 21.2, S: 24.3 },
     },
     {
       id: "boric-acid",
-      name: "Ácido Bórico",
+      name: "Boric Acid",
       formula: "H3BO3",
       elements: { B: 17.5 },
     },
     {
-      id: "sodium-molybdate",
-      name: "Molibdato de Sódio",
-      formula: "Na2MoO4·2H2O",
-      elements: { Mo: 39.7, Na: 19.5 },
+      id: "calcium-carbonate",
+      name: "Calcium Carbonate",
+      formula: "CaCO3",
+      elements: { Ca: 40.0 },
+    },
+    {
+      id: "calcium-monobasic-phosphate",
+      name: "Calcium Monobasic Phosphate",
+      formula: "Ca(H2PO4)2",
+      elements: { Ca: 15.9, P: 24.6 },
+    },
+    {
+      id: "calcium-nitrate-ag-grade",
+      name: "Calcium Nitrate (ag grade)",
+      formula: "Ca(NO3)2",
+      elements: { Ca: 19.0, "N (NO3-)": 15.5 },
+    },
+    {
+      id: "calcium-sulfate-dihydrate",
+      name: "Calcium Sulfate (Dihydrate)",
+      formula: "CaSO4·2H2O",
+      elements: { Ca: 23.3, S: 18.6 },
+    },
+    {
+      id: "copper-edta",
+      name: "Copper EDTA",
+      formula: "Cu-EDTA",
+      elements: { Cu: 13.0 },
+    },
+    {
+      id: "copper-nitrate-hexahydrate",
+      name: "Copper Nitrate (Hexahydrate)",
+      formula: "Cu(NO3)2·6H2O",
+      elements: { Cu: 21.7, "N (NO3-)": 14.5 },
+    },
+    {
+      id: "copper-sulfate-pentahydrate",
+      name: "Copper Sulfate (pentahydrate)",
+      formula: "CuSO4·5H2O",
+      elements: { Cu: 25.5, S: 12.8 },
+    },
+    {
+      id: "iron-dtpa",
+      name: "Iron DTPA",
+      formula: "Fe-DTPA",
+      elements: { Fe: 11.0 },
+    },
+    {
+      id: "iron-eddha",
+      name: "Iron EDDHA",
+      formula: "Fe-EDDHA",
+      elements: { Fe: 6.0 },
+    },
+    {
+      id: "iron-edta",
+      name: "Iron EDTA",
+      formula: "Fe-EDTA",
+      elements: { Fe: 13.0 },
+    },
+    {
+      id: "iron-ii-sulfate-heptahydrate",
+      name: "Iron II Sulfate (Heptahydrate)",
+      formula: "FeSO4·7H2O",
+      elements: { Fe: 20.1, S: 11.5 },
+    },
+    {
+      id: "magnesium-carbonate",
+      name: "Magnesium Carbonate",
+      formula: "MgCO3",
+      elements: { Mg: 28.8 },
+    },
+    {
+      id: "magnesium-sulfate-heptahydrate",
+      name: "Magnesium Sulfate (Heptahydrate)",
+      formula: "MgSO4·7H2O",
+      elements: { Mg: 9.9, S: 13.0 },
+    },
+    {
+      id: "mn-edta",
+      name: "Mn EDTA",
+      formula: "Mn-EDTA",
+      elements: { Mn: 13.0 },
+    },
+    {
+      id: "phosphoric-acid",
+      name: "Phosphoric Acid (75%)",
+      formula: "H3PO4",
+      elements: { P: 23.7 },
+    },
+    {
+      id: "potassium-carbonate",
+      name: "Potassium Carbonate",
+      formula: "K2CO3",
+      elements: { K: 56.6 },
+    },
+    {
+      id: "potassium-chloride",
+      name: "Potassium Chloride",
+      formula: "KCl",
+      elements: { K: 52.4, Cl: 47.6 },
+    },
+    {
+      id: "potassium-citrate",
+      name: "Potassium Citrate",
+      formula: "K3C6H5O7·H2O",
+      elements: { K: 36.1 },
+    },
+    {
+      id: "potassium-dibasic-phosphate",
+      name: "Potassium Dibasic Phosphate",
+      formula: "K2HPO4",
+      elements: { K: 44.9, P: 17.8 },
     }
   ];
 
@@ -492,6 +516,7 @@ const BoraGrowCalculator = () => {
   };
 
   const setVegetativeValues = () => {
+    setActivePhase("vegetative");
     setElements({
       "N (NO3-)": 210,
       "N (NH4+)": 0,
@@ -517,6 +542,7 @@ const BoraGrowCalculator = () => {
   };
 
   const setBloomValues = () => {
+    setActivePhase("bloom");
     setElements({
       "N (NO3-)": 150,
       "N (NH4+)": 0,
@@ -542,6 +568,7 @@ const BoraGrowCalculator = () => {
   };
 
   const resetValues = () => {
+    setActivePhase("none");
     setElements({
       "N (NO3-)": 0,
       "N (NH4+)": 0,
@@ -883,6 +910,31 @@ const BoraGrowCalculator = () => {
     setSelectPlantDialogOpen(true);
   };
 
+  // Add a function to handle deletion of custom substances
+  const handleDeleteCustomSubstance = async (substanceId: string) => {
+    try {
+      // Delete from Supabase
+      await deleteCustomSubstance(substanceId);
+      
+      // Update local state immediately
+      setUserCustomSubstances(prevSubstances => 
+        prevSubstances.filter(substance => substance.id !== substanceId)
+      );
+      
+      toast({
+        title: "Substância excluída",
+        description: "A substância foi removida com sucesso",
+      });
+    } catch (error) {
+      console.error("Error deleting custom substance:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir a substância",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="bg-background">
       <div className="max-w-[1200px] mx-auto px-2">
@@ -946,20 +998,28 @@ const BoraGrowCalculator = () => {
             </CardContent>
           </Card>
 
-          {/* Phase buttons */}
+          {/* Phase buttons with active state styling */}
           <div className="flex flex-wrap justify-between gap-2">
             <div className="flex flex-wrap gap-2">
-              <Button onClick={setVegetativeValues} variant="outline" className="flex items-center gap-1">
+              <Button 
+                onClick={setVegetativeValues} 
+                variant={activePhase === "vegetative" ? "default" : "outline"}
+                className={`flex items-center gap-1 ${activePhase === "vegetative" ? "bg-green-600 hover:bg-green-700" : ""}`}
+              >
                 Vegetativo
               </Button>
-              <Button onClick={setBloomValues} variant="outline" className="flex items-center gap-1">
+              <Button 
+                onClick={setBloomValues} 
+                variant={activePhase === "bloom" ? "default" : "outline"}
+                className={`flex items-center gap-1 ${activePhase === "bloom" ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+              >
                 Floração
               </Button>
             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className={`grid w-full ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}>
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-2">
               <TabsTrigger value="targets">Concentrações Alvo</TabsTrigger>
               <TabsTrigger value="substances">Seleção de Substâncias</TabsTrigger>
             </TabsList>
@@ -977,6 +1037,7 @@ const BoraGrowCalculator = () => {
                   openCustomSubstanceDialog={openCustomSubstanceDialog}
                   userCustomSubstances={userCustomSubstances}
                   getElementColor={getElementColor}
+                  onDeleteCustomSubstance={handleDeleteCustomSubstance}
                 />
                 
                 {/* Selected Substances */}
@@ -1021,7 +1082,7 @@ const BoraGrowCalculator = () => {
           </div>
 
           {results && (
-            <div ref={resultsRef}>
+            <div ref={resultsRef} className="w-full overflow-x-auto">
               <CalculationResults
                 results={results}
                 openSaveDialog={() => setSaveRecipeDialogOpen(true)}

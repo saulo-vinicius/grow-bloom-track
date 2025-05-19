@@ -1,4 +1,3 @@
-
 import { Json } from "@/integrations/supabase/types";
 
 export interface SimpleUser {
@@ -81,3 +80,17 @@ export const asCustomSubstance = (substance: Substance, userId?: string): Custom
     user_id: userId
   };
 };
+
+// Update SubstancePanelProps to include onDeleteCustomSubstance
+export interface SubstancePanelProps {
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  filteredSubstances: (Substance | PremiumSubstance)[];
+  selectedSubstances: SelectedSubstance[];
+  handleAddSubstance: (substance: Substance) => void;
+  handleRemoveSubstance: (id: string) => void;
+  openCustomSubstanceDialog: (substance?: Substance) => void;
+  userCustomSubstances: Substance[];
+  getElementColor: (element: string) => string;
+  onDeleteCustomSubstance?: (id: string) => void;
+}
