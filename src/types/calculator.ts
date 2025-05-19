@@ -56,7 +56,7 @@ export interface SelectedSubstance extends Substance {
 }
 
 // Interface para substâncias personalizadas
-// Now extends SubstanceBase and ensures id is required like in Substance
+// Now ensures id is required to match Substance
 export interface CustomSubstance extends SubstanceBase {
   id: string; // Changed from optional to required to match Substance
   user_id?: string;

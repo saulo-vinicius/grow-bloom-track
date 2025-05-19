@@ -4,23 +4,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
+import { SelectedSubstance } from "@/types/calculator";
 
 interface SelectedSubstancesPanelProps {
   selectedSubstances: SelectedSubstance[];
   handleUpdateWeight: (id: string, weight: number) => void;
   handleRemoveSubstance: (id: string) => void;
   massUnit: string;
-}
-
-interface Substance {
-  id: string;
-  name: string;
-  formula?: string;
-  elements: Record<string, number>;
-}
-
-interface SelectedSubstance extends Substance {
-  weight: number;
 }
 
 const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
