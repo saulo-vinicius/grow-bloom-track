@@ -4,6 +4,7 @@ import { Json } from "@/integrations/supabase/types";
 export interface SimpleUser {
   id: string;
   email?: string;
+  isPremium?: boolean;
 }
 
 export interface CalculationResult {

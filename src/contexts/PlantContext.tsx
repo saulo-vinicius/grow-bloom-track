@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from "@/hooks/use-toast";
@@ -38,9 +39,15 @@ interface PlantContextType {
   deletePlant: (id: string) => Promise<void>;
   addPlantStat: (plantId: string, stat: Omit<PlantStat, 'date'>) => Promise<void>;
   getPlantById: (id: string) => Plant | undefined;
+  uploadPlantImage: (file: File) => Promise<string>;
+  // Maximum number of plants a free user can have
+  MAX_FREE_USER_PLANTS: number;
 }
 
 const PlantContext = createContext<PlantContextType | undefined>(undefined);
+
+// Maximum number of plants a free user can add
+const MAX_FREE_USER_PLANTS = 2;
 
 export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -59,8 +66,39 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       try {
         setLoading(true);
-        // This is where you would fetch plants from Supabase
-        // For now, we'll load from localStorage as a placeholder
+        // Try to load plants from Supabase first
+        if (user && user.id) {
+          try {
+            const { data: plantsData, error: plantsError } = await supabase
+              .from('plants')
+              .select('*')
+              .eq('user_id', user.id)
+              .order('added_on', { ascending: false });
+
+            if (!plantsError && plantsData) {
+              // Convert from database format to our app format
+              const formattedPlants = plantsData.map((dbPlant: any) => ({
+                id: dbPlant.id,
+                name: dbPlant.name,
+                species: dbPlant.species || 'Não especificada',
+                location: dbPlant.location || 'indoor',
+                imageUrl: dbPlant.image_url || '/placeholder.svg',
+                addedOn: dbPlant.added_on || new Date().toISOString(),
+                lastUpdated: dbPlant.last_updated || new Date().toISOString(),
+                growthPhase: dbPlant.growth_phase || 'Vegetativa',
+                stats: dbPlant.stats || []
+              }));
+
+              setPlants(formattedPlants);
+              setLoading(false);
+              return;
+            }
+          } catch (dbError) {
+            console.error("Error fetching from Supabase, falling back to localStorage:", dbError);
+          }
+        }
+
+        // Fallback to localStorage
         const savedPlants = localStorage.getItem(`boragrow_plants_${user.id}`);
         
         if (savedPlants) {
@@ -85,12 +123,106 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (user && plants) {
       localStorage.setItem(`boragrow_plants_${user.id}`, JSON.stringify(plants));
+      
+      // Also try to sync with Supabase if possible
+      if (user.id) {
+        plants.forEach(async (plant) => {
+          try {
+            // Convert to database format
+            const dbPlant = {
+              id: plant.id,
+              user_id: user.id,
+              name: plant.name,
+              species: plant.species,
+              location: plant.location,
+              image_url: plant.imageUrl,
+              added_on: plant.addedOn,
+              last_updated: plant.lastUpdated,
+              growth_phase: plant.growthPhase,
+              stats: plant.stats
+            };
+            
+            // Upsert to ensure we only have one record per plant
+            const { error } = await supabase
+              .from('plants')
+              .upsert(dbPlant, { 
+                onConflict: 'id',
+                ignoreDuplicates: false
+              });
+              
+            if (error) {
+              console.error('Error syncing plant to Supabase:', error);
+            }
+          } catch (error) {
+            console.error('Error in Supabase sync:', error);
+          }
+        });
+      }
     }
   }, [plants, user]);
+
+  const uploadPlantImage = async (file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    
+    try {
+      // Try to upload to Supabase storage
+      if (user.id) {
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+          const filePath = `plant-images/${user.id}/${fileName}`;
+          
+          const { data, error } = await supabase.storage
+            .from('plants')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+            
+          if (error) {
+            throw error;
+          }
+          
+          // Get the public URL
+          const { data: urlData } = await supabase.storage
+            .from('plants')
+            .getPublicUrl(filePath);
+            
+          if (urlData && urlData.publicUrl) {
+            return urlData.publicUrl;
+          }
+        } catch (storageError) {
+          console.error("Error uploading to Supabase storage:", storageError);
+          // Continue to fallback method
+        }
+      }
+      
+      // Fallback: Use FileReader to create a data URL
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      throw err;
+    }
+  };
 
   const addPlant = async (plantData: Omit<Plant, 'id'>) => {
     try {
       if (!user) throw new Error('User not authenticated');
+
+      // Check if free user has reached their plant limit
+      if (!user.isPremium && plants.length >= MAX_FREE_USER_PLANTS) {
+        toast({
+          title: "Limite de plantas atingido",
+          description: "Usuários gratuitos podem adicionar apenas 2 plantas. Atualize para premium para adicionar mais plantas.",
+          variant: "destructive",
+        });
+        throw new Error('Plant limit reached for free user');
+      }
       
       const newPlant: Plant = {
         ...plantData,
@@ -105,12 +237,12 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         description: "Planta adicionada com sucesso!",
         variant: "default"
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding plant:', err);
       setError('Failed to add plant');
       toast({
         title: "Erro",
-        description: "Falha ao adicionar planta",
+        description: err.message || "Falha ao adicionar planta",
         variant: "destructive",
       });
       throw err;
@@ -153,6 +285,23 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const deletePlant = async (id: string) => {
     try {
       if (!user) throw new Error('User not authenticated');
+      
+      // Delete from Supabase if possible
+      if (user.id) {
+        try {
+          const { error } = await supabase
+            .from('plants')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id);
+            
+          if (error) {
+            console.error('Error deleting plant from Supabase:', error);
+          }
+        } catch (dbError) {
+          console.error("Error deleting from Supabase:", dbError);
+        }
+      }
       
       setPlants(prevPlants => prevPlants.filter(plant => plant.id !== id));
       toast({
@@ -225,6 +374,8 @@ export const PlantProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         deletePlant,
         addPlantStat,
         getPlantById,
+        uploadPlantImage,
+        MAX_FREE_USER_PLANTS
       }}
     >
       {children}

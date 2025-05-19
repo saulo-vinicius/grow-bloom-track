@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SimpleUser } from "@/types/calculator";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SelectPlantDialogProps {
   open: boolean;
@@ -33,14 +34,15 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
   onClose,
   currentRecipeData,
 }) => {
-  const { plants, addPlant, addPlantStat } = usePlants();
+  const { plants, addPlant, addPlantStat, MAX_FREE_USER_PLANTS } = usePlants();
+  const { user } = useAuth();
   const [plantName, setPlantName] = useState<string>("");
   const [selectedPlantId, setSelectedPlantId] = useState<string>("");
   const [isNewPlant, setIsNewPlant] = useState<boolean>(plants.length === 0);
   const [loading, setLoading] = useState<boolean>(false);
 
   // Reset state when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setPlantName("");
       setSelectedPlantId(plants.length > 0 ? plants[0].id : "");
@@ -72,11 +74,7 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
         return;
       }
 
-      // Get the user ID
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      // Check if user is authenticated
       if (!user) {
         toast({
           title: "Erro",
@@ -86,39 +84,59 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
         return;
       }
 
+      // Check if the user is a free user and trying to add more than the allowed plants
+      if (!user.isPremium && isNewPlant && plants.length >= MAX_FREE_USER_PLANTS) {
+        toast({
+          title: "Limite de plantas atingido",
+          description: `Usuários gratuitos podem adicionar apenas ${MAX_FREE_USER_PLANTS} plantas. Atualize para premium para adicionar mais plantas.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (isNewPlant) {
         // Create a new plant
-        await addPlant({
+        const newPlant = {
           name: plantName,
           species: "Não especificada",
-          location: "indoor",
+          location: "indoor" as const,
           imageUrl: "/placeholder.svg",
           addedOn: new Date().toISOString(),
           lastUpdated: new Date().toISOString(),
           stats: [],
           growthPhase: "Vegetativa",
-        });
-
-        // Get the newly created plant's ID (it would be the first one after sorting by addedOn)
-        const newPlants = [...plants].sort((a, b) => 
-          new Date(b.addedOn).getTime() - new Date(a.addedOn).getTime()
-        );
+        };
         
-        if (newPlants.length > 0) {
-          // Add the recipe as a stat to this plant
-          await addPlantStat(newPlants[0].id, {
-            temperature: 24,
-            humidity: 65,
-            ppm: 800,
-            notes: `Receita aplicada: ${currentRecipeData.name || "Sem nome"}`,
-            recipeApplied: {
-              type: "nutrient",
-              name: currentRecipeData.name || "Receita sem nome",
-              description: currentRecipeData.description || "",
-              data: currentRecipeData
-            }
-          });
-        }
+        await addPlant(newPlant);
+        
+        // Wait a moment for the plant to be added
+        setTimeout(async () => {
+          // Get the newly created plant (should be the first one with this name)
+          const newlyAddedPlant = plants.find(p => p.name === plantName);
+          
+          if (newlyAddedPlant) {
+            // Add the recipe as a stat to this plant
+            await addPlantStat(newlyAddedPlant.id, {
+              temperature: 24,
+              humidity: 65,
+              ppm: 800,
+              notes: `Receita aplicada: ${currentRecipeData.name || "Sem nome"}`,
+              recipeApplied: {
+                type: "nutrient",
+                name: currentRecipeData.name || "Receita sem nome",
+                description: currentRecipeData.description || "",
+                data: currentRecipeData
+              }
+            });
+            
+            toast({
+              title: "Sucesso",
+              description: "Receita aplicada à nova planta com sucesso!",
+            });
+          } else {
+            throw new Error("Falha ao encontrar a planta recém-criada");
+          }
+        }, 500);
       } else {
         // Add recipe to existing plant
         await addPlantStat(selectedPlantId, {
@@ -133,42 +151,43 @@ const SelectPlantDialog: React.FC<SelectPlantDialogProps> = ({
             data: currentRecipeData
           }
         });
+        
+        toast({
+          title: "Sucesso",
+          description: "Receita aplicada à planta existente com sucesso!",
+        });
+      }
+
+      // Try to save the recipe data to Supabase nutrient_recipes table
+      try {
+        const { error } = await supabase.from("nutrient_recipes").insert([
+          {
+            user_id: user.id,
+            name: `Planta: ${isNewPlant ? plantName : plants.find(p => p.id === selectedPlantId)?.name}`,
+            description: `Receita aplicada à planta: ${isNewPlant ? plantName : plants.find(p => p.id === selectedPlantId)?.name}`,
+            substances: currentRecipeData.substances || [],
+            elements: currentRecipeData.elements || [],
+            solution_volume: currentRecipeData.solutionVolume || 1,
+            volume_unit: currentRecipeData.volumeUnit || "liters",
+            ec_value: parseFloat(currentRecipeData.ecValue || "0"),
+          },
+        ]);
+
+        if (error) {
+          console.warn("Error saving plant recipe data to Supabase:", error);
+          // Don't throw here, we don't want to stop the flow if this fails
+        }
+      } catch (dbError) {
+        console.warn("Database error when saving recipe:", dbError);
+        // Don't throw here, we don't want to stop the flow if this fails
       }
       
-      // Save the recipe data to Supabase nutrient_recipes table as well
-      const { error } = await supabase.from("nutrient_recipes").insert([
-        {
-          user_id: user.id,
-          name: `Planta: ${isNewPlant ? plantName : plants.find(p => p.id === selectedPlantId)?.name}`,
-          description: `Receita aplicada à planta: ${isNewPlant ? plantName : plants.find(p => p.id === selectedPlantId)?.name}`,
-          substances: currentRecipeData.substances || [],
-          elements: currentRecipeData.elements || [],
-          solution_volume: currentRecipeData.solutionVolume || 1,
-          volume_unit: currentRecipeData.volumeUnit || "liters",
-          ec_value: parseFloat(currentRecipeData.ecValue || "0"),
-        },
-      ]);
-
-      if (error) {
-        console.error("Error saving plant recipe data:", error);
-        toast({
-          title: "Erro",
-          description: "Falha ao salvar os dados da receita.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Receita aplicada à planta com sucesso!",
-      });
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error applying recipe to plant:", error);
       toast({
         title: "Erro",
-        description: "Falha ao aplicar receita à planta.",
+        description: error.message || "Falha ao aplicar receita à planta.",
         variant: "destructive",
       });
     } finally {

@@ -309,11 +309,17 @@ const BoraGrowCalculator = () => {
       try {
         // Load saved recipes
         setLoadingRecipes(true);
-        const recipes = await getUserRecipes();
+        const recipes = await getUserRecipes().catch(error => {
+          console.error("Error loading recipes:", error);
+          return [];
+        });
         setSavedRecipes(recipes);
         
         // Load custom substances
-        const substances = await getUserCustomSubstances();
+        const substances = await getUserCustomSubstances().catch(error => {
+          console.error("Error loading custom substances:", error);
+          return [];
+        });
         setUserCustomSubstances(substances);
       } catch (error) {
         console.error("Error loading user data:", error);
@@ -465,6 +471,99 @@ const BoraGrowCalculator = () => {
     }
   };
 
+  const setVegetativeValues = () => {
+    setElements({
+      "N (NO3-)": 210,
+      "N (NH4+)": 0,
+      P: 31,
+      K: 235,
+      Mg: 48,
+      Ca: 200,
+      S: 64,
+      Fe: 2.8,
+      Mn: 0.5,
+      Zn: 0.05,
+      B: 0.5,
+      Cu: 0.02,
+      Si: 0.0,
+      Mo: 0.05,
+      Na: 0,
+      Cl: 0,
+    });
+    toast({
+      title: "Valores atualizados",
+      description: "Valores para fase vegetativa aplicados",
+    });
+  };
+
+  const setBloomValues = () => {
+    setElements({
+      "N (NO3-)": 150,
+      "N (NH4+)": 0,
+      P: 50,
+      K: 300,
+      Mg: 50,
+      Ca: 170,
+      S: 60,
+      Fe: 2.5,
+      Mn: 0.5,
+      Zn: 0.05,
+      B: 0.5,
+      Cu: 0.02,
+      Si: 0.0,
+      Mo: 0.05,
+      Na: 0,
+      Cl: 0,
+    });
+    toast({
+      title: "Valores atualizados",
+      description: "Valores para fase de floração aplicados",
+    });
+  };
+
+  const resetValues = () => {
+    setElements({
+      "N (NO3-)": 0,
+      "N (NH4+)": 0,
+      P: 0,
+      K: 0,
+      Mg: 0,
+      Ca: 0,
+      S: 0,
+      Fe: 0,
+      Mn: 0,
+      Zn: 0,
+      B: 0,
+      Cu: 0,
+      Si: 0,
+      Mo: 0,
+      Na: 0,
+      Cl: 0,
+    });
+    setSelectedSubstances([]);
+    setResults(null);
+    toast({
+      title: "Valores resetados",
+      description: "Todos os valores foram zerados",
+    });
+  };
+
+  const openDocumentation = () => {
+    window.open('https://docs.boragrow.com/nutrient-calculator', '_blank');
+    toast({
+      title: "Abrindo documentação",
+      description: "Redirecionando para a documentação",
+    });
+  };
+
+  const contactSupport = () => {
+    window.open('mailto:support@boragrow.com?subject=Suporte%20BoraGrow', '_blank');
+    toast({
+      title: "Contato de suporte",
+      description: "Abrindo email para suporte",
+    });
+  };
+
   const calculateNutrients = (): void => {
     if (selectedSubstances.length === 0) {
       toast({
@@ -496,7 +595,7 @@ const BoraGrowCalculator = () => {
       Object.entries(substance.elements).forEach(([element, percentage]) => {
         // Calculate contribution in mg (ppm)
         // Formula: weight (g) * percentage (%) / solution volume (L) * 10 = ppm
-        const contribution = (substance.weight * percentage / 100) / solutionVolume * 1000;
+        const contribution = (substance.weight * (percentage as number) / 100) / solutionVolume * 1000;
         
         // Store contribution for this substance and element
         contributionBySubstance[substance.id][element] = contribution;
@@ -541,7 +640,18 @@ const BoraGrowCalculator = () => {
       elements: elementResults,
       ecValue,
       solutionVolume,
-      volumeUnit
+      volumeUnit,
+      // Add these empty fields to match the CalculationResult interface
+      nutrientA: undefined,
+      nutrientB: undefined,
+      nutrientC: undefined,
+      ph: undefined,
+      wateringFrequency: undefined,
+      lightHours: undefined,
+      expectedYield: undefined,
+      growthTime: undefined,
+      name: undefined,
+      description: undefined
     };
     
     setResults(calculationResults);
@@ -584,11 +694,11 @@ const BoraGrowCalculator = () => {
       const recipeData: NutrientRecipe = {
         name: recipeName,
         description: recipeDescription,
-        substances: results.substances,
-        elements: results.elements,
+        substances: results.substances || [],
+        elements: results.elements || [],
         solution_volume: solutionVolume,
         volume_unit: volumeUnit,
-        ec_value: parseFloat(results.ecValue),
+        ec_value: parseFloat(results.ecValue || "0"),
         data: {
           ...results,
           name: recipeName,
@@ -704,14 +814,32 @@ const BoraGrowCalculator = () => {
     
     // Set the results
     if (recipe.data) {
-      setResults(recipe.data);
+      setResults({
+        ...recipe.data,
+        nutrientA: undefined,
+        nutrientB: undefined,
+        nutrientC: undefined,
+        ph: undefined,
+        wateringFrequency: undefined,
+        lightHours: undefined,
+        expectedYield: undefined,
+        growthTime: undefined,
+      });
     } else {
       setResults({
         substances: recipe.substances,
         elements: recipe.elements,
         ecValue: recipe.ec_value?.toString() || "0.0",
         solutionVolume: recipe.solution_volume,
-        volumeUnit: recipe.volume_unit
+        volumeUnit: recipe.volume_unit,
+        nutrientA: undefined,
+        nutrientB: undefined,
+        nutrientC: undefined,
+        ph: undefined,
+        wateringFrequency: undefined,
+        lightHours: undefined,
+        expectedYield: undefined,
+        growthTime: undefined,
       });
     }
     
@@ -811,6 +939,26 @@ const BoraGrowCalculator = () => {
             </CardContent>
           </Card>
 
+          {/* Phase buttons */}
+          <div className="flex flex-wrap justify-between gap-3">
+            <div className="flex gap-3">
+              <Button onClick={setVegetativeValues} variant="outline" className="flex items-center gap-1">
+                Vegetativo
+              </Button>
+              <Button onClick={setBloomValues} variant="outline" className="flex items-center gap-1">
+                Floração
+              </Button>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={openDocumentation} variant="ghost" className="flex items-center gap-1">
+                Ver Documentação
+              </Button>
+              <Button onClick={contactSupport} variant="ghost" className="flex items-center gap-1">
+                Contato de Suporte
+              </Button>
+            </div>
+          </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="targets">Concentrações Alvo</TabsTrigger>
@@ -866,14 +1014,7 @@ const BoraGrowCalculator = () => {
               size="lg"
               variant="outline"
               className="px-8"
-              onClick={() => {
-                setSelectedSubstances([]);
-                setResults(null);
-                toast({
-                  title: "Redefinição Completa",
-                  description: "Todas as seleções e resultados foram limpos",
-                });
-              }}
+              onClick={resetValues}
             >
               <X className="mr-2 h-5 w-5" />
               Limpar Tudo
@@ -889,7 +1030,7 @@ const BoraGrowCalculator = () => {
                 volumeUnit={volumeUnit}
                 getElementColor={getElementColor}
                 solutionVolume={solutionVolume}
-                user={user}
+                user={user as SimpleUser | null}
                 handleSelectPlantDialog={handleSelectPlantDialog}
               />
             </div>

@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Json } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 export interface NutrientRecipe {
   id?: string;
@@ -37,16 +38,31 @@ const convertSupabaseToNutrientRecipe = (data: SupabaseNutrientRecipe): Nutrient
 };
 
 /**
+ * Check if the user is authenticated and get the user
+ */
+const getAuthenticatedUser = async (): Promise<User> => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      throw new Error(error?.message || "User not authenticated");
+    }
+    
+    return user;
+  } catch (error: any) {
+    console.error("Authentication error:", error);
+    toast("Erro de autenticação. Por favor, faça login novamente.");
+    throw new Error("User not authenticated");
+  }
+};
+
+/**
  * Save a nutrient recipe to the database
  */
 export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<NutrientRecipe> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
-
   try {
+    const user = await getAuthenticatedUser();
+    
     const recipeData = {
       ...recipe,
       user_id: user.id,
@@ -75,8 +91,9 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
     }
 
     return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in saveNutrientRecipe:", error);
+    toast("Erro ao salvar receita: " + (error.message || "Falha desconhecida"));
     throw error;
   }
 };
@@ -85,44 +102,48 @@ export const saveNutrientRecipe = async (recipe: NutrientRecipe): Promise<Nutrie
  * Get all recipes for the current user
  */
 export const getUserRecipes = async (): Promise<NutrientRecipe[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const user = await getAuthenticatedUser();
 
-  const { data, error } = await supabase
-    .from("nutrient_recipes")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("nutrient_recipes")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching recipes:", error);
+    if (error) {
+      console.error("Error fetching recipes:", error);
+      throw error;
+    }
+
+    return (data || []).map(item => convertSupabaseToNutrientRecipe(item as SupabaseNutrientRecipe));
+  } catch (error: any) {
+    console.error("Error in getUserRecipes:", error);
+    toast("Erro ao carregar receitas: " + (error.message || "Falha desconhecida"));
     throw error;
   }
-
-  return (data || []).map(item => convertSupabaseToNutrientRecipe(item as SupabaseNutrientRecipe));
 };
 
 /**
  * Delete a recipe by ID
  */
 export const deleteNutrientRecipe = async (recipeId: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const user = await getAuthenticatedUser();
 
-  const { error } = await supabase
-    .from("nutrient_recipes")
-    .delete()
-    .eq("id", recipeId)
-    .eq("user_id", user.id);
+    const { error } = await supabase
+      .from("nutrient_recipes")
+      .delete()
+      .eq("id", recipeId)
+      .eq("user_id", user.id);
 
-  if (error) {
-    console.error("Error deleting recipe:", error);
+    if (error) {
+      console.error("Error deleting recipe:", error);
+      throw error;
+    }
+  } catch (error: any) {
+    console.error("Error in deleteNutrientRecipe:", error);
+    toast("Erro ao excluir receita: " + (error.message || "Falha desconhecida"));
     throw error;
   }
 };
@@ -131,97 +152,105 @@ export const deleteNutrientRecipe = async (recipeId: string): Promise<void> => {
  * Get a specific recipe by ID
  */
 export const getRecipeById = async (recipeId: string): Promise<NutrientRecipe> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const user = await getAuthenticatedUser();
 
-  const { data, error } = await supabase
-    .from("nutrient_recipes")
-    .select("*")
-    .eq("id", recipeId)
-    .eq("user_id", user.id)
-    .single();
+    const { data, error } = await supabase
+      .from("nutrient_recipes")
+      .select("*")
+      .eq("id", recipeId)
+      .eq("user_id", user.id)
+      .single();
 
-  if (error) {
-    console.error("Error fetching recipe:", error);
+    if (error) {
+      console.error("Error fetching recipe:", error);
+      throw error;
+    }
+
+    return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
+  } catch (error: any) {
+    console.error("Error in getRecipeById:", error);
+    toast("Erro ao carregar receita: " + (error.message || "Falha desconhecida"));
     throw error;
   }
-
-  return convertSupabaseToNutrientRecipe(data as SupabaseNutrientRecipe);
 };
 
 /**
  * Save a custom substance to the database
  */
 export const saveCustomSubstance = async (substance: any): Promise<any> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const user = await getAuthenticatedUser();
 
-  const substanceData = {
-    ...substance,
-    user_id: user.id,
-  };
+    const substanceData = {
+      ...substance,
+      user_id: user.id,
+    };
 
-  const { data, error } = await supabase
-    .from("custom_substances")
-    .upsert(substanceData)
-    .select()
-    .single();
+    const { data, error } = await supabase
+      .from("custom_substances")
+      .upsert(substanceData)
+      .select()
+      .single();
 
-  if (error) {
-    console.error("Error saving custom substance:", error);
+    if (error) {
+      console.error("Error saving custom substance:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error("Error in saveCustomSubstance:", error);
+    toast("Erro ao salvar substância: " + (error.message || "Falha desconhecida"));
     throw error;
   }
-
-  return data;
 };
 
 /**
  * Get all custom substances for the current user
  */
 export const getUserCustomSubstances = async (): Promise<any[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const user = await getAuthenticatedUser();
 
-  const { data, error } = await supabase
-    .from("custom_substances")
-    .select("*")
-    .eq("user_id", user.id);
+    const { data, error } = await supabase
+      .from("custom_substances")
+      .select("*")
+      .eq("user_id", user.id);
 
-  if (error) {
-    console.error("Error fetching custom substances:", error);
+    if (error) {
+      console.error("Error fetching custom substances:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error: any) {
+    console.error("Error in getUserCustomSubstances:", error);
+    toast("Erro ao carregar substâncias personalizadas: " + (error.message || "Falha desconhecida"));
     throw error;
   }
-
-  return data || [];
 };
 
 /**
  * Delete a custom substance by ID
  */
 export const deleteCustomSubstance = async (substanceId: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const user = await getAuthenticatedUser();
 
-  const { error } = await supabase
-    .from("custom_substances")
-    .delete()
-    .eq("id", substanceId)
-    .eq("user_id", user.id);
+    const { error } = await supabase
+      .from("custom_substances")
+      .delete()
+      .eq("id", substanceId)
+      .eq("user_id", user.id);
 
-  if (error) {
-    console.error("Error deleting custom substance:", error);
+    if (error) {
+      console.error("Error deleting custom substance:", error);
+      throw error;
+    }
+  } catch (error: any) {
+    console.error("Error in deleteCustomSubstance:", error);
+    toast("Erro ao excluir substância: " + (error.message || "Falha desconhecida"));
     throw error;
   }
 };
