@@ -21,7 +21,7 @@ import {
   deleteCustomSubstance
 } from "@/lib/recipes";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { calculateNutrients } from "@/utils/calculatorUtils";
+import { calculateNutrients as calculateNutrientsUtil } from "@/utils/calculatorUtils";
 
 // Import components
 import SubstancesPanel from "./calculator/SubstancesPanel";
@@ -128,7 +128,7 @@ const BoraGrowCalculator = () => {
     if (selectedSubstances.length > 0) {
       const hasSubstancesWithWeight = selectedSubstances.some(s => s.weight > 0);
       if (hasSubstancesWithWeight) {
-        calculateNutrients();
+        performCalculation();
       }
     }
   }, [selectedSubstances, elements, solutionVolume]);
@@ -310,8 +310,8 @@ const BoraGrowCalculator = () => {
     }
   };
 
-  const calculateNutrients = () => {
-    // This function now directly uses the imported utility function instead of require
+  const performCalculation = () => {
+    // This function calls the utility function with a different name to avoid recursion
     if (selectedSubstances.length === 0) {
       toast({
         title: "Erro",
@@ -321,7 +321,7 @@ const BoraGrowCalculator = () => {
       return;
     }
     
-    const calculationResults = calculateNutrients(
+    const calculationResults = calculateNutrientsUtil(
       selectedSubstances,
       elements,
       solutionVolume,
