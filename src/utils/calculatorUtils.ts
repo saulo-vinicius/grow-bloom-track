@@ -7,7 +7,7 @@ import {
   substanceIonMap 
 } from "./calculatorConstants";
 
-// Improved EC calculation based on the HydroBuddy model
+// EC calculation based on the HydroBuddy model
 export const calculateAccurateEC = (
   selectedSubstances: SelectedSubstance[], 
   solutionVolume: number
@@ -82,13 +82,13 @@ export const calculateAccurateEC = (
   });
   
   // Calculate EC based on ion concentrations and molar conductivity
-  // EC (mS/cm) = Σ (λᵢ × [ionᵢ])
+  // Corrected EC formula: EC (mS/cm) = Σ (λᵢ × [ionᵢ]) where [ionᵢ] is in mol/L
   let totalEC = 0;
   
   console.log('\n-------- EC Calculation by Ion --------');
   for (const [ion, mmolPerL] of Object.entries(ionConcentrations)) {
     if (ionConductivity[ion]) {
-      // Convert mmol/L to mol/L and multiply by the ion's conductivity value
+      // Convert mmol/L to mol/L (divide by 1000) and multiply by the ion's conductivity value
       const molPerL = mmolPerL / 1000; // convert mmol/L to mol/L
       const contribution = ionConductivity[ion] * molPerL;
       totalEC += contribution;

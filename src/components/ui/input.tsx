@@ -30,6 +30,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         )}
         onChange={handleChange}
         ref={ref}
+        inputMode={type === 'number' ? 'decimal' : props.inputMode}
         {...props}
       />
     )
