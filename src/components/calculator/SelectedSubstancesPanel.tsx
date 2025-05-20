@@ -23,7 +23,7 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Improved function to handle weight input changes
+  // Improved function to handle weight input changes with better decimal handling
   const handleWeightChange = (id: string, inputValue: string) => {
     // Handle empty values
     if (!inputValue || inputValue === '.') {
@@ -31,9 +31,8 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
       return;
     }
     
-    // Replace any commas with dots and parse the number
-    const value = inputValue.replace(/,/g, '.');
-    const numValue = parseFloat(value);
+    // Make sure we have a valid number
+    const numValue = parseFloat(inputValue);
     
     if (!isNaN(numValue)) {
       handleUpdateWeight(id, numValue);

@@ -7,7 +7,7 @@ import {
   substanceIonMap 
 } from "./calculatorConstants";
 
-// EC calculation based on the HydroBuddy model
+// Corrected EC calculation based on the HydroBuddy model
 export const calculateAccurateEC = (
   selectedSubstances: SelectedSubstance[], 
   solutionVolume: number

@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface TargetElementsPanelProps {
   elements: Record<string, number>;
@@ -17,6 +18,19 @@ const TargetElementsPanel: React.FC<TargetElementsPanelProps> = ({
   handleUpdateElementTarget,
   getElementColor,
 }) => {
+  const [showMicronutrients, setShowMicronutrients] = useState(false);
+  
+  // Define which elements are macronutrients (always shown)
+  const macronutrients = ["N (NO3-)", "N (NH4+)", "P", "K", "Mg", "Ca", "S"];
+  
+  // Function to handle input change with proper decimal handling
+  const handleInputChange = (element: string, value: string) => {
+    const numValue = value === '' ? 0 : parseFloat(value);
+    if (!isNaN(numValue)) {
+      handleUpdateElementTarget(element, numValue);
+    }
+  };
+  
   return (
     <Card className="h-full">
       <CardHeader className="pb-3">
@@ -24,60 +38,77 @@ const TargetElementsPanel: React.FC<TargetElementsPanelProps> = ({
           <CardTitle className="text-lg">
             Concentrações Alvo (ppm)
           </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // Reset all values to zero
-              const clearedElements = Object.keys(elements).reduce(
-                (acc, key) => {
-                  acc[key] = 0;
-                  return acc;
-                },
-                {} as Record<string, number>
-              );
-
-              Object.keys(clearedElements).forEach(element => {
-                handleUpdateElementTarget(element, 0);
-              });
-
-              toast({
-                title: "Limpeza Completa",
-                description: "Todas as concentrações alvo foram limpas",
-              });
-            }}
-          >
-            Limpar Valores
-          </Button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Object.entries(elements).map(([element, target]) => (
-            <div key={element} className="space-y-1">
-              <Label
-                htmlFor={`element-${element}`}
-                className={`text-sm font-medium px-2 py-1 rounded-sm ${getElementColor(element)}`}
-              >
-                {element}
-              </Label>
-              <Input
-                id={`element-${element}`}
-                type="number"
-                value={target}
-                onChange={(e) =>
-                  handleUpdateElementTarget(
-                    element,
-                    parseFloat(e.target.value) || 0
-                  )
-                }
-                placeholder="ppm"
-                inputMode="decimal"
-                pattern="[0-9]*[.,]?[0-9]*"
-              />
-            </div>
-          ))}
+          {/* Always show macronutrients */}
+          {Object.entries(elements)
+            .filter(([element]) => macronutrients.includes(element))
+            .map(([element, target]) => (
+              <div key={element} className="space-y-1">
+                <Label
+                  htmlFor={`element-${element}`}
+                  className={`text-sm font-medium px-2 py-1 rounded-sm ${getElementColor(element)}`}
+                >
+                  {element}
+                </Label>
+                <Input
+                  id={`element-${element}`}
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.]?[0-9]*"
+                  value={target === 0 ? "" : target.toString()}
+                  onChange={(e) => handleInputChange(element, e.target.value)}
+                  placeholder="ppm"
+                />
+              </div>
+            ))}
         </div>
+        
+        {/* Toggle button for micronutrients */}
+        <Button
+          variant="outline"
+          className="mt-4 w-full"
+          onClick={() => setShowMicronutrients(!showMicronutrients)}
+        >
+          {showMicronutrients ? (
+            <span className="flex items-center">
+              Ocultar Micronutrientes <ChevronUp className="ml-2 h-4 w-4" />
+            </span>
+          ) : (
+            <span className="flex items-center">
+              Exibir Micronutrientes <ChevronDown className="ml-2 h-4 w-4" />
+            </span>
+          )}
+        </Button>
+        
+        {/* Micronutrients section (collapsible) */}
+        {showMicronutrients && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t">
+            {Object.entries(elements)
+              .filter(([element]) => !macronutrients.includes(element))
+              .map(([element, target]) => (
+                <div key={element} className="space-y-1">
+                  <Label
+                    htmlFor={`element-${element}`}
+                    className={`text-sm font-medium px-2 py-1 rounded-sm ${getElementColor(element)}`}
+                  >
+                    {element}
+                  </Label>
+                  <Input
+                    id={`element-${element}`}
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    value={target === 0 ? "" : target.toString()}
+                    onChange={(e) => handleInputChange(element, e.target.value)}
+                    placeholder="ppm"
+                  />
+                </div>
+              ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
