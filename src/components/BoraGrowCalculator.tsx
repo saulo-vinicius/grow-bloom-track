@@ -495,11 +495,12 @@ const BoraGrowCalculator = () => {
     }
     
     // Create a results object from the recipe
+    // Convert solutionVolume string to number for the results object
     setResults({
       substances: recipe.substances,
       elements: recipe.elements,
       ecValue: recipe.ec_value?.toString() || "0.0",
-      solutionVolume: recipe.solution_volume,
+      solutionVolume: parseFloat(recipe.solution_volume.toString()), // Ensure it's a number
       volumeUnit: recipe.volume_unit,
       nutrientA: undefined,
       nutrientB: undefined,
