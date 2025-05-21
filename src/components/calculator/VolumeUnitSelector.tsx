@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface VolumeUnitSelectorProps {
-  solutionVolume: number;
-  setSolutionVolume: (volume: number) => void;
+  solutionVolume: string; // Changed from number to string
+  setSolutionVolume: (volume: string) => void; // Changed to accept string
   volumeUnit: string;
   setVolumeUnit: (unit: string) => void;
   massUnit: string;
@@ -38,8 +38,12 @@ const VolumeUnitSelector: React.FC<VolumeUnitSelectorProps> = ({
                 inputMode="decimal"
                 value={solutionVolume}
                 onChange={(e) => {
-                  const newVolume = parseFloat(e.target.value) || 1;
-                  setSolutionVolume(newVolume);
+                  // Accept the value as a string to maintain decimal input
+                  let val = e.target.value;
+                  // Only update if it's a valid decimal or empty
+                  if (/^(\d*[.]?\d*)?$/.test(val)) {
+                    setSolutionVolume(val);
+                  }
                 }}
                 min="0.1"
                 step="0.1"

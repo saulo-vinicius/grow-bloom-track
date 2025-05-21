@@ -13,7 +13,7 @@ const CalculatorPage: React.FC = () => {
         <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md border border-blue-200 dark:border-blue-800 text-sm">
           <p className="font-medium text-blue-800 dark:text-blue-300">Dicas de uso da calculadora:</p>
           <ul className="list-disc list-inside mt-2 space-y-1 text-blue-700 dark:text-blue-400">
-            <li>Use <span className="font-bold">ponto (.)</span> como separador decimal nos campos numéricos</li>
+            <li>Você pode usar <span className="font-bold">ponto (.)</span> ou <span className="font-bold">vírgula (,)</span> como separador decimal</li>
             <li>O cálculo de EC é baseado no modelo empírico do HydroBuddy</li>
             <li>Selecione substâncias e defina os pesos para obter resultados precisos</li>
           </ul>

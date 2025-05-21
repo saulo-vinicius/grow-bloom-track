@@ -60,7 +60,7 @@ const BoraGrowCalculator = () => {
   
   // State for solution parameters
   const [calculationType, setCalculationType] = useState<string>("desired");
-  const [solutionVolume, setSolutionVolume] = useState<number>(1);
+  const [solutionVolume, setSolutionVolume] = useState<string>("1"); // Changed from number to string
   const [volumeUnit, setVolumeUnit] = useState<string>("liters");
   const [massUnit, setMassUnit] = useState<string>("g");
   
@@ -321,10 +321,13 @@ const BoraGrowCalculator = () => {
       return;
     }
     
+    // Convert string volume to number for calculation
+    const numericVolume = parseFloat(solutionVolume) || 1;
+    
     const calculationResults = calculateNutrientsUtil(
       selectedSubstances,
       elements,
-      solutionVolume,
+      numericVolume,
       volumeUnit
     );
     
@@ -341,6 +344,7 @@ const BoraGrowCalculator = () => {
     setElements(resetElements);
     setSelectedSubstances([]);
     setResults(null);
+    setSolutionVolume("1"); // Reset to string "1" instead of number 1
     toast({
       title: "Valores resetados",
       description: "Todos os valores foram zerados",
@@ -383,7 +387,7 @@ const BoraGrowCalculator = () => {
         description: recipeDescription,
         substances: results.substances || [],
         elements: results.elements || [],
-        solution_volume: solutionVolume,
+        solution_volume: parseFloat(solutionVolume) || 1, // Convert string to number for storage
         volume_unit: volumeUnit,
         ec_value: parseFloat(results.ecValue || "0"),
         user_id: user.id
@@ -452,7 +456,7 @@ const BoraGrowCalculator = () => {
   };
 
   const handleLoadRecipe = (recipe: NutrientRecipe) => {
-    setSolutionVolume(recipe.solution_volume);
+    setSolutionVolume(recipe.solution_volume.toString()); // Convert number to string
     setVolumeUnit(recipe.volume_unit);
     
     if (recipe.substances && Array.isArray(recipe.substances)) {

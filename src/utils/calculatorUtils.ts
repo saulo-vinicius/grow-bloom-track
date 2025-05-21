@@ -1,3 +1,4 @@
+
 import { SelectedSubstance, CalculationResult } from "@/types/calculator";
 import { 
   elementToIons, 
@@ -157,6 +158,9 @@ export const calculateNutrients = (
   solutionVolume: number,
   volumeUnit: string
 ): CalculationResult => {
+  console.log(`Starting calculation with solution volume: ${solutionVolume} ${volumeUnit}`);
+  console.log(`Selected substances:`, selectedSubstances);
+  
   const totalElements: Record<string, number> = {};
   const contributionBySubstance: Record<string, Record<string, number>> = {};
   
@@ -169,6 +173,8 @@ export const calculateNutrients = (
     
     if (substance.weight <= 0) return;
     
+    console.log(`Processing substance: ${substance.name}, weight: ${substance.weight}g`);
+    
     Object.entries(substance.elements).forEach(([element, percentage]) => {
       const contribution = (substance.weight * (percentage as number) / 100) / solutionVolume * 1000;
       
@@ -176,11 +182,15 @@ export const calculateNutrients = (
       
       if (totalElements[element] !== undefined) {
         totalElements[element] += contribution;
+        console.log(`  - Element ${element}: ${percentage}% → ${contribution.toFixed(2)} ppm contribution`);
       } else {
         totalElements[element] = contribution;
+        console.log(`  - New element ${element}: ${percentage}% → ${contribution.toFixed(2)} ppm contribution`);
       }
     });
   });
+  
+  console.log(`Total element concentrations:`, totalElements);
   
   const elementResults = Object.entries(elements).map(([element, target]) => {
     const actual = totalElements[element] || 0;
@@ -203,6 +213,7 @@ export const calculateNutrients = (
   
   // Use the empirical EC model instead of the theoretical calculation
   const ecValue = calculateECValue(elementResults);
+  console.log(`Calculated EC value: ${ecValue} mS/cm`);
   
   return {
     substances: substanceResults,

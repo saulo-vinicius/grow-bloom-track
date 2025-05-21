@@ -10,7 +10,7 @@ import { calculateNutrients } from "@/utils/calculatorUtils";
 interface ActionButtonsProps {
   selectedSubstances: SelectedSubstance[];
   elements: Record<string, number>;
-  solutionVolume: number;
+  solutionVolume: string; // Changed from number to string
   volumeUnit: string;
   setResults: (results: any) => void;
   resetValues: () => void;
@@ -36,10 +36,13 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       return;
     }
 
+    // Convert solution volume from string to number for calculation
+    const numericVolume = parseFloat(solutionVolume) || 1;
+
     const calculationResults = calculateNutrients(
       selectedSubstances,
       elements,
-      solutionVolume,
+      numericVolume,
       volumeUnit
     );
     
