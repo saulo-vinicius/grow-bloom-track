@@ -644,7 +644,7 @@ const BoraGrowCalculator = () => {
           <ActionButtons 
             selectedSubstances={selectedSubstances}
             elements={elements}
-            solutionVolume={solutionVolume}
+            solutionVolume={solutionVolume} // Pass as string since ActionButtons.tsx has been updated to expect string
             volumeUnit={volumeUnit}
             setResults={setResults}
             resetValues={resetAllValues}
@@ -658,7 +658,7 @@ const BoraGrowCalculator = () => {
                 massUnit={massUnit}
                 volumeUnit={volumeUnit}
                 getElementColor={getElementColor}
-                solutionVolume={solutionVolume}
+                solutionVolume={parseFloat(solutionVolume) || 0} // Convert string to number
                 user={user as SimpleUser | null}
                 handleSelectPlantDialog={handleSelectPlantDialog}
               />
