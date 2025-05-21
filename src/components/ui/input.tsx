@@ -4,23 +4,23 @@ import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, value, ...props }, ref) => {
-    // Handle input change for decimal values with controlled component approach
+    // Handle input change for decimal values with proper controlled component approach
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      // If this is a number input or has inputMode="decimal"
-      if ((type === 'number' || props.inputMode === 'decimal') && e.target.value.includes(',')) {
-        // Create a copy of the event with comma replaced by period
-        const fixedValue = e.target.value.replace(/,/g, '.');
-        
-        // Create a new synthetic event
-        const syntheticEvent = Object.create(e);
-        syntheticEvent.target = { ...e.target, value: fixedValue };
-        
-        // Call the original onChange handler with the modified event
-        if (onChange) {
-          onChange(syntheticEvent);
+      // Check if this is a number input or has inputMode="decimal"
+      if ((type === 'number' || props.inputMode === 'decimal') && onChange) {
+        // If the value contains a comma, replace it with a period
+        if (e.target.value.includes(',')) {
+          // Create a new synthetic event with the modified value
+          const newEvent = Object.create(e);
+          newEvent.target = { ...e.target, value: e.target.value.replace(/,/g, '.') };
+          // Call the original onChange handler with the modified event
+          onChange(newEvent);
+        } else {
+          // If no comma, just pass the original event
+          onChange(e);
         }
       } else if (onChange) {
-        // Call the original onChange handler for non-decimal inputs
+        // For non-decimal inputs, call the original onChange handler
         onChange(e);
       }
     };
@@ -35,6 +35,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         onChange={handleChange}
         ref={ref}
         inputMode={type === 'number' ? 'decimal' : props.inputMode}
+        pattern={type === 'number' ? '[0-9]*[.]?[0-9]*' : props.pattern}
         {...props}
         value={value}
       />

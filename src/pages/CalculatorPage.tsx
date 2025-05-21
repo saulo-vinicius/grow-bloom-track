@@ -14,7 +14,7 @@ const CalculatorPage: React.FC = () => {
           <p className="font-medium text-blue-800 dark:text-blue-300">Dicas de uso da calculadora:</p>
           <ul className="list-disc list-inside mt-2 space-y-1 text-blue-700 dark:text-blue-400">
             <li>Use <span className="font-bold">ponto (.)</span> como separador decimal nos campos numéricos</li>
-            <li>O cálculo de EC é baseado na metodologia do HydroBuddy, utilizando condutividades molares dos íons</li>
+            <li>O cálculo de EC é baseado no modelo empírico do HydroBuddy</li>
             <li>Selecione substâncias e defina os pesos para obter resultados precisos</li>
           </ul>
         </div>

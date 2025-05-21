@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface TargetElementsPanelProps {
@@ -25,7 +24,18 @@ const TargetElementsPanel: React.FC<TargetElementsPanelProps> = ({
   
   // Function to handle input change with proper decimal handling
   const handleInputChange = (element: string, value: string) => {
-    const numValue = value === '' ? 0 : parseFloat(value);
+    // Handle empty values
+    if (!value || value === '.') {
+      handleUpdateElementTarget(element, 0);
+      return;
+    }
+    
+    // Replace comma with period if present
+    const normalizedValue = value.replace(/,/g, '.');
+    
+    // Make sure we have a valid number
+    const numValue = parseFloat(normalizedValue);
+    
     if (!isNaN(numValue)) {
       handleUpdateElementTarget(element, numValue);
     }
@@ -38,6 +48,7 @@ const TargetElementsPanel: React.FC<TargetElementsPanelProps> = ({
           <CardTitle className="text-lg">
             Concentrações Alvo (ppm)
           </CardTitle>
+          <div className="text-xs text-muted-foreground">Use . (ponto) para números decimais</div>
         </div>
       </CardHeader>
       <CardContent>

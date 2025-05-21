@@ -1,4 +1,3 @@
-
 import { SelectedSubstance, CalculationResult } from "@/types/calculator";
 import { 
   elementToIons, 
@@ -7,7 +6,51 @@ import {
   substanceIonMap 
 } from "./calculatorConstants";
 
-// Corrected EC calculation based on the HydroBuddy model
+// EC calculation based on HydroBuddy's empirical model
+export const calculateECValue = (elementResults: any[]): string => {
+  let weightedSum = 0;
+  console.log("Calculating EC using empirical HydroBuddy model");
+  
+  elementResults.forEach((result) => {
+    const element = result.element;
+    const concentration = result.actual;
+    
+    if (concentration <= 0) return;
+    
+    let factor = 0.001; // Default factor
+    let contribution = 0;
+    
+    if (element === "N (NO3-)") factor = 0.00175;
+    else if (element === "N (NH4+)") factor = 0.00236;
+    else if (element === "P") factor = 0.00195;
+    else if (element === "K") factor = 0.00256;
+    else if (element === "Ca") factor = 0.00244;
+    else if (element === "Mg") factor = 0.00486;
+    else if (element === "S") factor = 0.00208;
+    else if (element === "Fe") factor = 0.00054;
+    else if (element === "Mn") factor = 0.00055;
+    else if (element === "B") factor = 0.00093;
+    else if (element === "Zn") factor = 0.00047;
+    else if (element === "Cu") factor = 0.00047;
+    else if (element === "Mo") factor = 0.00031;
+    else if (element === "Cl") factor = 0.00282;
+    else if (element === "Na") factor = 0.00435;
+    else if (element === "Si") factor = 0.00071;
+    
+    contribution = concentration * factor;
+    weightedSum += contribution;
+    
+    console.log(`${element}: ${concentration.toFixed(2)} ppm * ${factor} = ${contribution.toFixed(6)} contribution to EC`);
+  });
+  
+  // Apply final adjustment factor (1.0 = no adjustment)
+  const ecValue = weightedSum * 1.0;
+  console.log(`Final calculated EC: ${ecValue.toFixed(3)} mS/cm`);
+  
+  return ecValue.toFixed(3);
+};
+
+// Previous technical/theoretical EC calculation kept for reference
 export const calculateAccurateEC = (
   selectedSubstances: SelectedSubstance[], 
   solutionVolume: number
@@ -158,7 +201,8 @@ export const calculateNutrients = (
     };
   });
   
-  const ecValue = calculateAccurateEC(selectedSubstances, solutionVolume);
+  // Use the empirical EC model instead of the theoretical calculation
+  const ecValue = calculateECValue(elementResults);
   
   return {
     substances: substanceResults,

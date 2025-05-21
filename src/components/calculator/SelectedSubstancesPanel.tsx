@@ -31,8 +31,11 @@ const SelectedSubstancesPanel: React.FC<SelectedSubstancesPanelProps> = ({
       return;
     }
     
+    // Replace comma with period if present
+    const normalizedValue = inputValue.replace(/,/g, '.');
+    
     // Make sure we have a valid number
-    const numValue = parseFloat(inputValue);
+    const numValue = parseFloat(normalizedValue);
     
     if (!isNaN(numValue)) {
       handleUpdateWeight(id, numValue);
